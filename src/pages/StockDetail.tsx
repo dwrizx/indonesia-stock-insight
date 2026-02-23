@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge } from "lucide-react";
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
 import { stocks, formatRupiah, formatVolume } from "@/data/stockData";
 import StockChart from "@/components/StockChart";
@@ -9,6 +10,7 @@ import PeerComparison from "@/components/PeerComparison";
 import StockNewsList from "@/components/StockNewsList";
 
 const StockDetail = () => {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"chart" | "teknikal">("chart");
   const { ticker } = useParams();
   const navigate = useNavigate();
@@ -57,18 +59,27 @@ const StockDetail = () => {
     <div className="min-h-screen bg-background noise-bg">
       {/* Header */}
       <header className="border-b border-border bg-card/60 backdrop-blur-xl sticky top-0 z-40">
-        <div className="container mx-auto flex items-center gap-4 px-4 py-3">
-          <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent px-2.5 py-1.5">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </button>
-          <div className="h-5 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20">
-              <BarChart3 className="h-4 w-4 text-primary-foreground" />
+        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent px-2.5 py-1.5">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
+            <div className="h-5 w-px bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20">
+                <BarChart3 className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-extrabold gradient-text hidden sm:inline">IDX Saham</span>
             </div>
-            <span className="text-sm font-extrabold gradient-text">IDX Saham</span>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/50 text-foreground transition-colors hover:bg-accent"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
         </div>
       </header>
 
@@ -87,13 +98,13 @@ const StockDetail = () => {
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-foreground">{stock.ticker.replace(".JK", "")}</h1>
-                    <span className="rounded-lg bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary uppercase tracking-wider">{stock.sector}</span>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">{stock.ticker.replace(".JK", "")}</h1>
+                    <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">{stock.sector}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{stock.name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-4xl md:text-5xl font-extrabold text-foreground">Rp{stock.price.toLocaleString("id-ID")}</p>
+                  <p className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground">Rp{stock.price.toLocaleString("id-ID")}</p>
                   <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${isGain ? "bg-gain/10 border border-gain/20 text-gain" : "bg-loss/10 border border-loss/20 text-loss"}`}>
                     {isGain ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                     <span>{isGain ? "+" : ""}{stock.change.toLocaleString("id-ID")}</span>
