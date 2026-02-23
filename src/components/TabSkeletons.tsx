@@ -157,3 +157,73 @@ export const CompareSkeleton = () => (
     </div>
   </motion.div>
 );
+
+export const ScreeningSkeleton = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="space-y-5"
+  >
+    <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <SkeletonPulse className="h-5 w-40" />
+        <div className="flex gap-2">
+          <SkeletonPulse className="h-9 w-20 rounded-lg" />
+          <SkeletonPulse className="h-9 w-20 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <SkeletonPulse className="h-3 w-16" />
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from({ length: 3 }).map((_, j) => (
+                <SkeletonPulse key={j} className="h-7 w-20 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <SkeletonPulse className="h-4 w-36 mb-3" />
+      <div className="flex flex-wrap gap-1.5">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <SkeletonPulse key={i} className="h-7 w-14 rounded-lg" />
+        ))}
+      </div>
+    </div>
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="px-4 py-2.5 bg-secondary/30 border-b border-border/50 flex justify-between">
+            <SkeletonPulse className="h-3 w-28" />
+            <SkeletonPulse className="h-5 w-20 rounded-full" />
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="flex justify-between">
+              <div className="space-y-2">
+                <SkeletonPulse className="h-5 w-16" />
+                <SkeletonPulse className="h-3 w-28" />
+              </div>
+              <div className="space-y-2">
+                <SkeletonPulse className="h-5 w-20" />
+                <SkeletonPulse className="h-3 w-12" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 3 }).map((_, j) => (
+                <SkeletonPulse key={j} className="h-16 rounded-lg" />
+              ))}
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {Array.from({ length: 4 }).map((_, j) => (
+                <SkeletonPulse key={j} className="h-10 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);

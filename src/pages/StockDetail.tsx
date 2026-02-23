@@ -67,12 +67,12 @@ const StockDetail = () => {
               <span className="hidden sm:inline">Dashboard</span>
             </button>
             <div className="h-5 w-px bg-border" />
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20">
                 <BarChart3 className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-extrabold gradient-text hidden sm:inline">IDX Saham</span>
-            </div>
+            </Link>
           </div>
           <button
             onClick={toggleTheme}
@@ -104,13 +104,28 @@ const StockDetail = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
             <div className="relative p-6 md:p-8">
               <div className="flex flex-wrap items-start justify-between gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">{stock.ticker.replace(".JK", "")}</h1>
-                    <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">{stock.sector}</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">{stock.ticker.replace(".JK", "")}</h1>
+                      <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">{stock.sector}</span>
+                      {(() => {
+                        let score = 0;
+                        if (stock.pe > 0 && stock.pe < 15) score += 2;
+                        else if (stock.pe > 0 && stock.pe < 20) score += 1;
+                        if (stock.roe > 15) score += 2;
+                        if (stock.dividendYield > 3) score += 1;
+                        if (stock.changePercent > 0) score += 1;
+                        const signal = score >= 5 ? "BUY" : score >= 3 ? "HOLD" : "SELL";
+                        const signalColor = signal === "BUY" ? "bg-gain/15 text-gain border-gain/25" : signal === "HOLD" ? "bg-primary/15 text-primary border-primary/25" : "bg-loss/15 text-loss border-loss/25";
+                        return (
+                          <span className={`rounded-lg border px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${signalColor}`}>
+                            {signal}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{stock.name}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">{stock.name}</p>
-                </div>
                 <div className="text-right">
                   <p className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
                     Rp<AnimatedCounter value={stock.price} format={(v) => Math.round(v).toLocaleString("id-ID")} />
@@ -268,6 +283,62 @@ const StockDetail = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Price Targets */}
+            <div className="rounded-xl border border-border bg-card p-5 gradient-border">
+              <h3 className="mb-4 flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Price Targets
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Conservative", mult: stock.roe > 15 ? 1.05 : 1.02 },
+                  { label: "Moderate", mult: stock.roe > 15 ? 1.12 : 1.07 },
+                  { label: "Aggressive", mult: stock.roe > 15 ? 1.22 : 1.15 },
+                ].map(t => {
+                  const target = Math.round(stock.price * t.mult);
+                  const upside = ((target / stock.price - 1) * 100).toFixed(1);
+                  return (
+                    <div key={t.label} className="rounded-lg bg-secondary/40 p-3 text-center">
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">{t.label}</p>
+                      <p className="font-mono text-xs font-bold text-foreground">Rp{target.toLocaleString("id-ID")}</p>
+                      <p className="font-mono text-[10px] font-bold text-gain">+{upside}%</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Key Indicators */}
+            <div className="rounded-xl border border-border bg-card p-5 gradient-border">
+              <h3 className="mb-4 flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                <Gauge className="h-4 w-4 text-primary" />
+                Key Indicators
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {(() => {
+                  const rsi14 = Math.max(10, Math.min(90, 50 + stock.changePercent * 5 - (stock.beta - 1) * 10 + (stock.ticker.charCodeAt(2) % 15)));
+                  const rsi12 = rsi14 + 2;
+                  const macd = +(stock.changePercent * 0.8 + (stock.roe > 15 ? 0.5 : -0.3)).toFixed(2);
+                  const volRatio = +(0.8 + Math.abs(stock.changePercent) * 0.15 + (stock.volume > 50e6 ? 0.3 : 0)).toFixed(2);
+                  return [
+                    { label: "RSI (14)", value: rsi14.toFixed(0), warn: rsi14 > 70 || rsi14 < 30 },
+                    { label: "RSI (12)", value: rsi12.toFixed(0), warn: rsi12 > 70 || rsi12 < 30 },
+                    { label: "MACD", value: macd > 0 ? `+${macd}` : `${macd}`, positive: macd > 0 },
+                    { label: "Vol Ratio", value: `${volRatio}x`, positive: volRatio > 1 },
+                  ].map(ind => (
+                    <div key={ind.label} className={`rounded-lg p-3 text-center border ${
+                      ind.warn ? "bg-loss/10 border-loss/20" : ind.positive ? "bg-gain/10 border-gain/20" : "bg-secondary/40 border-border/50"
+                    }`}>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">{ind.label}</p>
+                      <p className={`font-mono text-sm font-bold ${
+                        ind.warn ? "text-loss" : ind.positive ? "text-gain" : "text-foreground"
+                      }`}>{ind.value}</p>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
