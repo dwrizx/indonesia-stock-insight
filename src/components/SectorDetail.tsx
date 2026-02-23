@@ -1,8 +1,9 @@
 import {
   stocks as baseStocks,
   type Stock,
-  sectorData,
   formatRupiah,
+  getSectorColor,
+  getOrderedSectorsFromStocks,
 } from "@/data/stockData";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,14 +26,10 @@ type SectorDetailProps = {
 const SectorDetail = ({ stocks = baseStocks }: SectorDetailProps) => {
   const navigate = useNavigate();
   const [expandedSector, setExpandedSector] = useState<string | null>(null);
-  const palette = sectorData.map((s) => s.color);
-  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
-  const allSectorNames = Array.from(
-    new Set([...sectorData.map((s) => s.name), ...stocks.map((s) => s.sector)]),
-  );
+  const allSectorNames = getOrderedSectorsFromStocks(stocks);
 
   const sectorStats = allSectorNames
-    .map((sectorName, i) => {
+    .map((sectorName) => {
       const sectorStocks = stocks.filter((s) => s.sector === sectorName);
       const avgChange =
         sectorStocks.length > 0
@@ -52,8 +49,7 @@ const SectorDetail = ({ stocks = baseStocks }: SectorDetailProps) => {
       const totalMCap = sectorStocks.reduce((a, b) => a + b.marketCap, 0);
       return {
         name: sectorName,
-        color:
-          sectorColorMap.get(sectorName) ?? palette[i % Math.max(palette.length, 1)],
+        color: getSectorColor(sectorName),
         stocks: sectorStocks,
         count: sectorStocks.length,
         avgChange,

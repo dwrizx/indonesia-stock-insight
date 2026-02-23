@@ -1,4 +1,5 @@
 import { yahooSnapshot } from "@/data/yahooSnapshot";
+import { idxSectorByTicker } from "@/data/idxSectorByTicker";
 
 export interface Stock {
   ticker: string;
@@ -42,6 +43,73 @@ export interface StockNews {
   source: string;
   time: string;
   sentiment: "positive" | "negative" | "neutral";
+}
+
+type SectorMeta = {
+  name: string;
+  color: string;
+};
+
+const IDX_SECTOR_META: SectorMeta[] = [
+  { name: "Energi", color: "hsl(36, 92%, 58%)" },
+  { name: "Bahan Baku", color: "hsl(22, 82%, 56%)" },
+  { name: "Perindustrian", color: "hsl(200, 72%, 52%)" },
+  { name: "Konsumen Non-Primer", color: "hsl(332, 68%, 56%)" },
+  { name: "Konsumen Primer", color: "hsl(152, 69%, 46%)" },
+  { name: "Kesehatan", color: "hsl(173, 65%, 45%)" },
+  { name: "Keuangan", color: "hsl(45, 93%, 58%)" },
+  { name: "Properti & Real Estat", color: "hsl(278, 62%, 56%)" },
+  { name: "Teknologi", color: "hsl(255, 72%, 62%)" },
+  { name: "Infrastruktur", color: "hsl(208, 82%, 56%)" },
+  { name: "Utilitas", color: "hsl(190, 66%, 52%)" },
+  { name: "Transportasi & Logistik", color: "hsl(12, 78%, 55%)" },
+  { name: "Lainnya", color: "hsl(220, 12%, 45%)" },
+];
+
+const IDX_SECTOR_COLOR_MAP = new Map(
+  IDX_SECTOR_META.map((sector) => [sector.name, sector.color]),
+);
+
+const IDX_SECTOR_ORDER = IDX_SECTOR_META.map((sector) => sector.name);
+
+function normalizeSectorName(raw: string | undefined): string {
+  const text = (raw ?? "").trim().toLowerCase();
+  if (!text) return "Lainnya";
+
+  if (text.includes("energy")) return "Energi";
+  if (text.includes("basic material")) return "Bahan Baku";
+  if (text.includes("industrial")) return "Perindustrian";
+  if (text.includes("consumer defensive")) return "Konsumen Primer";
+  if (text.includes("consumer cyclical")) return "Konsumen Non-Primer";
+  if (text.includes("healthcare")) return "Kesehatan";
+  if (text.includes("financial")) return "Keuangan";
+  if (text.includes("real estate")) return "Properti & Real Estat";
+  if (text.includes("technology")) return "Teknologi";
+  if (text.includes("communication")) return "Infrastruktur";
+  if (text.includes("utility")) return "Utilitas";
+
+  if (text.includes("transportation")) return "Transportasi & Logistik";
+  if (text.includes("logistic")) return "Transportasi & Logistik";
+
+  if (text.includes("telekom")) return "Infrastruktur";
+  if (text.includes("konsumsi")) return "Konsumen Primer";
+  if (text.includes("ritel")) return "Konsumen Non-Primer";
+  if (text.includes("industri")) return "Perindustrian";
+  if (text.includes("properti")) return "Properti & Real Estat";
+  if (text.includes("keuangan")) return "Keuangan";
+  if (text.includes("teknologi")) return "Teknologi";
+  if (text.includes("infrastruktur")) return "Infrastruktur";
+  if (text.includes("utilitas")) return "Utilitas";
+  if (text.includes("energi")) return "Energi";
+  if (text.includes("bahan baku")) return "Bahan Baku";
+  if (text.includes("kesehatan")) return "Kesehatan";
+  if (text.includes("transportasi")) return "Transportasi & Logistik";
+
+  return "Lainnya";
+}
+
+function resolveSector(ticker: string, fallback: string): string {
+  return normalizeSectorName(idxSectorByTicker[ticker] ?? fallback);
 }
 
 const staticMarketIndices: MarketIndex[] = [
@@ -400,10 +468,16 @@ const staticTickers = new Set(staticStocks.map((stock) => stock.ticker));
 
 const mergedStaticStocks: Stock[] = staticStocks.map((stock) => {
   const live = yahooSnapshot.stocks[stock.ticker];
-  if (!live) return stock;
+  if (!live) {
+    return {
+      ...stock,
+      sector: resolveSector(stock.ticker, stock.sector),
+    };
+  }
 
   return {
     ...stock,
+    sector: resolveSector(stock.ticker, stock.sector),
     name: pickText(live.name, stock.name),
     price: pickNumber(live.price, stock.price),
     change: pickNumber(live.change, stock.change),
@@ -432,7 +506,7 @@ const extraLiveStocks: Stock[] = Object.values(yahooSnapshot.stocks)
     return {
       ticker: live.ticker,
       name: pickText(live.name, live.ticker.replace(".JK", "")),
-      sector: "Lainnya",
+      sector: resolveSector(live.ticker, "Lainnya"),
       price,
       change: pickNumber(live.change, price - prevClose),
       changePercent: pickNumber(
@@ -614,13 +688,23 @@ export function generateChartData(
 }
 
 export const sectorData = [
-  { name: "Keuangan", value: 42, color: "hsl(45, 93%, 58%)" },
-  { name: "Konsumsi", value: 18, color: "hsl(152, 69%, 46%)" },
-  { name: "Telekomunikasi", value: 10, color: "hsl(200, 70%, 50%)" },
-  { name: "Industri", value: 10, color: "hsl(280, 60%, 55%)" },
-  { name: "Teknologi", value: 12, color: "hsl(340, 65%, 55%)" },
-  { name: "Ritel", value: 8, color: "hsl(25, 80%, 55%)" },
+  ...IDX_SECTOR_META.map((sector) => ({
+    name: sector.name,
+    color: sector.color,
+    value: stocks.filter((stock) => stock.sector === sector.name).length,
+  })),
 ];
+
+export function getSectorColor(name: string): string {
+  return IDX_SECTOR_COLOR_MAP.get(name) ?? IDX_SECTOR_COLOR_MAP.get("Lainnya")!;
+}
+
+export function getOrderedSectorsFromStocks(
+  allStocks: Pick<Stock, "sector">[],
+): string[] {
+  const set = new Set(allStocks.map((stock) => stock.sector));
+  return IDX_SECTOR_ORDER.filter((sector) => set.has(sector));
+}
 
 export function formatRupiah(value: number): string {
   if (value >= 1e15) return `Rp${(value / 1e12).toFixed(0)}T`;

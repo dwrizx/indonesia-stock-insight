@@ -4,7 +4,7 @@ import {
   type Stock,
   formatRupiah,
   formatVolume,
-  sectorData,
+  getSectorColor,
 } from "@/data/stockData";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -24,8 +24,6 @@ const HeatMap = ({ stocks = baseStocks }: HeatMapProps) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("change");
   const [hoveredTicker, setHoveredTicker] = useState<string | null>(null);
-  const palette = sectorData.map((s) => s.color);
-  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
 
   const maxAbsChange = Math.max(
     1,
@@ -35,9 +33,9 @@ const HeatMap = ({ stocks = baseStocks }: HeatMapProps) => {
   const maxMCap = Math.max(1, ...stocks.map((s) => s.marketCap));
 
   const sectorNames = Array.from(new Set(stocks.map((s) => s.sector))).sort();
-  const sectorList = sectorNames.map((name, i) => ({
+  const sectorList = sectorNames.map((name) => ({
     name,
-    color: sectorColorMap.get(name) ?? palette[i % palette.length],
+    color: getSectorColor(name),
   }));
 
   const getIntensity = (stock: Stock) => {

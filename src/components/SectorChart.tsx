@@ -1,8 +1,9 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
-  sectorData,
   stocks as baseStocks,
   type Stock,
+  getSectorColor,
+  getOrderedSectorsFromStocks,
 } from "@/data/stockData";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Cell as BarCell } from "recharts";
@@ -12,15 +13,10 @@ type SectorChartProps = {
 };
 
 const SectorChart = ({ stocks = baseStocks }: SectorChartProps) => {
-  const palette = sectorData.map((s) => s.color);
-  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
-
-  const allSectorNames = Array.from(
-    new Set([...sectorData.map((s) => s.name), ...stocks.map((s) => s.sector)]),
-  );
+  const allSectorNames = getOrderedSectorsFromStocks(stocks);
 
   // Calculate sector performance
-  const sectorPerf = allSectorNames.map((sectorName, i) => {
+  const sectorPerf = allSectorNames.map((sectorName) => {
     const sectorStocks = stocks.filter((s) => s.sector === sectorName);
     const totalMCap = sectorStocks.reduce(
       (sum, stock) => sum + stock.marketCap,
@@ -33,9 +29,7 @@ const SectorChart = ({ stocks = baseStocks }: SectorChartProps) => {
         : 0;
     return {
       name: sectorName,
-      color:
-        sectorColorMap.get(sectorName) ??
-        palette[i % Math.max(palette.length, 1)],
+      color: getSectorColor(sectorName),
       avgChange: parseFloat(avgChange.toFixed(2)),
       count: sectorStocks.length,
       value: totalMCap,

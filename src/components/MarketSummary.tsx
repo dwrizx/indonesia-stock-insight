@@ -1,6 +1,6 @@
 import {
   stocks as defaultStocks,
-  sectorData,
+  getOrderedSectorsFromStocks,
   type Stock,
 } from "@/data/stockData";
 import { motion } from "framer-motion";
@@ -22,20 +22,24 @@ const MarketSummary = ({
   const isPositive = gainCount > lossCount;
 
   // Find best sector
-  const sectorPerf = sectorData
-    .map((sector) => {
-      const sectorStocks = stocks.filter((s) => s.sector === sector.name);
+  const sectorPerf = getOrderedSectorsFromStocks(stocks)
+    .map((sectorName) => {
+      const sectorStocks = stocks.filter((s) => s.sector === sectorName);
       const avgChange =
         sectorStocks.length > 0
           ? sectorStocks.reduce((a, b) => a + b.changePercent, 0) /
             sectorStocks.length
           : 0;
-      return { name: sector.name, avgChange };
+      return { name: sectorName, avgChange, count: sectorStocks.length };
     })
+    .filter((sector) => sector.count > 0)
     .sort((a, b) => b.avgChange - a.avgChange);
 
-  const bestSector = sectorPerf[0];
-  const worstSector = sectorPerf[sectorPerf.length - 1];
+  const bestSector = sectorPerf[0] ?? { name: "-", avgChange: 0 };
+  const worstSector = sectorPerf[sectorPerf.length - 1] ?? {
+    name: "-",
+    avgChange: 0,
+  };
 
   const topGainer = [...stocks].sort(
     (a, b) => b.changePercent - a.changePercent,

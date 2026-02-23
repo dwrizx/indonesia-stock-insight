@@ -51,7 +51,11 @@ import {
   CompareSkeleton,
   ScreeningSkeleton,
 } from "@/components/TabSkeletons";
-import { sectorData, formatRupiah, formatVolume } from "@/data/stockData";
+import {
+  formatRupiah,
+  formatVolume,
+  getOrderedSectorsFromStocks,
+} from "@/data/stockData";
 import { getMarketIndexUrl } from "@/lib/marketIndex";
 import { getMarketSession } from "@/lib/marketSession";
 import { useLiveMarketIndices } from "@/hooks/use-live-market-indices";
@@ -97,8 +101,8 @@ const Index = () => {
     [activeTab],
   );
   const sectors = useMemo(
-    () => ["Semua", ...sectorData.map((s) => s.name)],
-    [],
+    () => ["Semua", ...getOrderedSectorsFromStocks(stocks)],
+    [stocks],
   );
 
   const filteredStocks = useMemo(() => {
