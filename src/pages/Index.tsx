@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon, PieChart, GitCompareArrows, Users, DollarSign, BarChart2, Search } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon, PieChart, GitCompareArrows, Users, DollarSign, BarChart2, Search, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import MarketTicker from "@/components/MarketTicker";
@@ -18,7 +19,8 @@ import MarketSummary from "@/components/MarketSummary";
 import MostActive from "@/components/MostActive";
 import SectorDetail from "@/components/SectorDetail";
 import { useTheme } from "@/components/ThemeProvider";
-import { OverviewSkeleton, StocksSkeleton, HeatmapSkeleton, SectorSkeleton, CompareSkeleton } from "@/components/TabSkeletons";
+import StockScreener from "@/components/StockScreener";
+import { OverviewSkeleton, StocksSkeleton, HeatmapSkeleton, SectorSkeleton, CompareSkeleton, ScreeningSkeleton } from "@/components/TabSkeletons";
 import { stocks, marketIndices, sectorData, formatRupiah, formatVolume } from "@/data/stockData";
 
 type SortKey = "changePercent" | "pe" | "dividendYield" | "marketCap" | "price";
@@ -39,7 +41,7 @@ const Index = () => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const [activeTab, setActiveTab] = useState<"overview" | "stocks" | "heatmap" | "sectors" | "compare">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "stocks" | "heatmap" | "sectors" | "compare" | "screening">("overview");
   const [tabLoading, setTabLoading] = useState(false);
 
   const switchTab = useCallback((tab: typeof activeTab) => {
@@ -88,7 +90,7 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-card/60 backdrop-blur-xl sticky top-0 z-40">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="relative">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/25">
                 <BarChart3 className="h-5 w-5 text-primary-foreground" />
@@ -99,7 +101,7 @@ const Index = () => {
               <h1 className="text-base font-extrabold tracking-tight gradient-text">IDX Saham</h1>
               <p className="text-[10px] text-muted-foreground tracking-wide uppercase hidden sm:block">Indonesia Stock Analysis</p>
             </div>
-          </div>
+          </Link>
           <div className="hidden md:block flex-1 max-w-md mx-4">
             <SearchBar />
           </div>
@@ -216,6 +218,7 @@ const Index = () => {
           {([
             { key: "overview" as const, label: "Ringkasan", icon: Activity, badge: null },
             { key: "stocks" as const, label: "Saham", icon: Zap, badge: stocks.length },
+            { key: "screening" as const, label: "Screening", icon: SlidersHorizontal, badge: null },
             { key: "heatmap" as const, label: "Peta Pasar", icon: Layers, badge: null },
             { key: "compare" as const, label: "Bandingkan", icon: GitCompareArrows, badge: null },
             { key: "sectors" as const, label: "Sektor", icon: PieChart, badge: null },
@@ -256,6 +259,7 @@ const Index = () => {
             >
               {activeTab === "overview" && <OverviewSkeleton />}
               {activeTab === "stocks" && <StocksSkeleton />}
+              {activeTab === "screening" && <ScreeningSkeleton />}
               {activeTab === "heatmap" && <HeatmapSkeleton />}
               {activeTab === "sectors" && <SectorSkeleton />}
               {activeTab === "compare" && <CompareSkeleton />}
@@ -459,6 +463,18 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <StockCompare />
+                </motion.div>
+              )}
+
+              {activeTab === "screening" && (
+                <motion.div
+                  key="screening"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <StockScreener />
                 </motion.div>
               )}
             </>
