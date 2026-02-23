@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart } from "lucide-react";
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge } from "lucide-react";
 import { motion } from "framer-motion";
 import { stocks, formatRupiah, formatVolume } from "@/data/stockData";
 import StockChart from "@/components/StockChart";
 import TechnicalAnalysis from "@/components/TechnicalAnalysis";
+import PeerComparison from "@/components/PeerComparison";
+import StockNewsList from "@/components/StockNewsList";
 
 const StockDetail = () => {
   const [activeTab, setActiveTab] = useState<"chart" | "teknikal">("chart");
@@ -41,7 +43,11 @@ const StockDetail = () => {
   const fundamentals = [
     { label: "P/E Ratio", value: stock.pe > 0 ? stock.pe.toFixed(1) : "N/A", highlight: stock.pe > 0 && stock.pe < 15 },
     { label: "P/BV", value: stock.pbv.toFixed(1), highlight: stock.pbv < 2 },
+    { label: "EPS", value: `Rp${stock.eps.toLocaleString("id-ID")}`, highlight: stock.eps > 0 },
+    { label: "ROE", value: `${stock.roe.toFixed(1)}%`, highlight: stock.roe > 15 },
     { label: "Div. Yield", value: `${stock.dividendYield.toFixed(1)}%`, highlight: stock.dividendYield > 3 },
+    { label: "Beta", value: stock.beta.toFixed(2) },
+    { label: "D/E Ratio", value: stock.debtToEquity.toFixed(1) },
     { label: "52W High", value: `Rp${stock.high52w.toLocaleString("id-ID")}` },
     { label: "52W Low", value: `Rp${stock.low52w.toLocaleString("id-ID")}` },
     { label: "Sektor", value: stock.sector },
@@ -223,8 +229,10 @@ const StockDetail = () => {
               <div className="space-y-3">
                 {[
                   { label: "Valuasi", score: stock.pe > 0 && stock.pe < 20 ? 75 : 40, color: stock.pe > 0 && stock.pe < 20 ? "bg-gain" : "bg-loss" },
+                  { label: "Profitabilitas", score: stock.roe > 0 ? Math.min(stock.roe * 4, 100) : 10, color: stock.roe > 15 ? "bg-gain" : "bg-primary" },
                   { label: "Dividen", score: Math.min(stock.dividendYield * 15, 100), color: stock.dividendYield > 3 ? "bg-gain" : "bg-primary" },
                   { label: "Momentum", score: isGain ? 70 : 35, color: isGain ? "bg-gain" : "bg-loss" },
+                  { label: "Risiko", score: Math.max(100 - stock.beta * 50, 10), color: stock.beta < 1 ? "bg-gain" : "bg-loss" },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between mb-1">
@@ -250,6 +258,12 @@ const StockDetail = () => {
               <ExternalLink className="h-4 w-4" />
             </a>
           </motion.div>
+        </div>
+
+        {/* Bottom Section: Peer Comparison + News */}
+        <div className="grid gap-6 lg:grid-cols-2 mt-6">
+          <PeerComparison currentTicker={stock.ticker} sector={stock.sector} />
+          <StockNewsList ticker={stock.ticker} />
         </div>
       </main>
     </div>

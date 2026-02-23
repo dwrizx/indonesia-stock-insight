@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import MarketTicker from "@/components/MarketTicker";
 import MarketOverview from "@/components/MarketOverview";
 import TopMovers from "@/components/TopMovers";
 import StockCard from "@/components/StockCard";
+import StockTable from "@/components/StockTable";
+import HeatMap from "@/components/HeatMap";
 import SectorChart from "@/components/SectorChart";
 import { stocks, marketIndices, sectorData } from "@/data/stockData";
 
@@ -25,6 +27,7 @@ const Index = () => {
   const [sortKey, setSortKey] = useState<SortKey>("changePercent");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const sectors = useMemo(() => ["Semua", ...sectorData.map(s => s.name)], []);
 
@@ -152,6 +155,15 @@ const Index = () => {
           <MarketOverview />
         </section>
 
+        {/* Heatmap */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Layers className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Peta Pasar</h3>
+          </div>
+          <HeatMap />
+        </section>
+
         {/* Top Movers + Sector */}
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
@@ -174,20 +186,37 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">{filteredStocks.length} dari {stocks.length} saham</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowFilters(f => !f)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all border ${
-                showFilters || sectorFilter !== "Semua"
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Filter className="h-3.5 w-3.5" />
-              Filter & Sort
-              {sectorFilter !== "Semua" && (
-                <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] text-primary-foreground">1</span>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="flex items-center rounded-lg bg-secondary/50 p-0.5 border border-border">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`rounded-md p-2 transition-all ${viewMode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`rounded-md p-2 transition-all ${viewMode === "table" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <List className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <button
+                onClick={() => setShowFilters(f => !f)}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all border ${
+                  showFilters || sectorFilter !== "Semua"
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Filter className="h-3.5 w-3.5" />
+                Filter & Sort
+                {sectorFilter !== "Semua" && (
+                  <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] text-primary-foreground">1</span>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Filter Panel */}
@@ -257,22 +286,26 @@ const Index = () => {
             )}
           </AnimatePresence>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <AnimatePresence mode="popLayout">
-              {filteredStocks.map((stock, i) => (
-                <motion.div
-                  key={stock.ticker}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3, delay: i * 0.03 }}
-                >
-                  <StockCard stock={stock} index={i} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {viewMode === "table" ? (
+            <StockTable stocks={filteredStocks} />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <AnimatePresence mode="popLayout">
+                {filteredStocks.map((stock, i) => (
+                  <motion.div
+                    key={stock.ticker}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3, delay: i * 0.03 }}
+                  >
+                    <StockCard stock={stock} index={i} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
 
           {filteredStocks.length === 0 && (
             <div className="text-center py-12">
