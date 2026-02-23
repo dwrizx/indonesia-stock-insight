@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon, PieChart, GitCompareArrows, Users, DollarSign, BarChart2 } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon, PieChart, GitCompareArrows, Users, DollarSign, BarChart2, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import MarketTicker from "@/components/MarketTicker";
@@ -13,6 +13,10 @@ import StockCompare from "@/components/StockCompare";
 import MobileNav from "@/components/MobileNav";
 import Footer from "@/components/Footer";
 import AnimatedCounter from "@/components/AnimatedCounter";
+import MarketSentiment from "@/components/MarketSentiment";
+import MarketSummary from "@/components/MarketSummary";
+import MostActive from "@/components/MostActive";
+import SectorDetail from "@/components/SectorDetail";
 import { useTheme } from "@/components/ThemeProvider";
 import { OverviewSkeleton, StocksSkeleton, HeatmapSkeleton, SectorSkeleton, CompareSkeleton } from "@/components/TabSkeletons";
 import { stocks, marketIndices, sectorData, formatRupiah, formatVolume } from "@/data/stockData";
@@ -267,7 +271,17 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
+                  {/* Market Summary */}
+                  <MarketSummary />
+                  
                   <MarketOverview />
+
+                  {/* Sentiment + Most Active */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <MarketSentiment />
+                    <MostActive />
+                  </div>
+
                   <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
                       <TopMovers />
@@ -427,9 +441,12 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
-                  className="max-w-2xl"
+                  className="space-y-6"
                 >
-                  <SectorChart />
+                  <div className="max-w-2xl">
+                    <SectorChart />
+                  </div>
+                  <SectorDetail />
                 </motion.div>
               )}
 
