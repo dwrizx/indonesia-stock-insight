@@ -8,6 +8,18 @@ interface StockTableProps {
   stocks: Stock[];
 }
 
+function getSignalBadge(stock: Stock): { label: string; color: string } {
+  const score =
+    (stock.pe > 0 && stock.pe < 15 ? 2 : stock.pe > 0 && stock.pe < 25 ? 1 : 0) +
+    (stock.roe > 15 ? 2 : stock.roe > 10 ? 1 : 0) +
+    (stock.dividendYield > 3 ? 1 : 0) +
+    (stock.changePercent > 0 ? 1 : 0) +
+    (stock.beta < 1.2 ? 1 : 0);
+  if (score >= 5) return { label: "BUY", color: "text-gain" };
+  if (score >= 3) return { label: "HOLD", color: "text-primary" };
+  return { label: "SELL", color: "text-loss" };
+}
+
 const StockTable = ({ stocks }: StockTableProps) => {
   const navigate = useNavigate();
 
@@ -18,9 +30,9 @@ const StockTable = ({ stocks }: StockTableProps) => {
       transition={{ duration: 0.3 }}
       className="rounded-xl border border-border bg-card overflow-hidden"
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[600px]">
         <table className="w-full text-sm">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-card">
             <tr className="border-b border-border bg-secondary/30">
               <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ticker</th>
               <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Nama</th>
@@ -28,6 +40,7 @@ const StockTable = ({ stocks }: StockTableProps) => {
               <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Harga</th>
               <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Perubahan</th>
               <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell w-24">Trend</th>
+              <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Sinyal</th>
               <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Volume</th>
               <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">P/E</th>
               <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Div. Yield</th>
@@ -37,6 +50,7 @@ const StockTable = ({ stocks }: StockTableProps) => {
           <tbody>
             {stocks.map((stock, i) => {
               const isGain = stock.change >= 0;
+              const signal = getSignalBadge(stock);
               return (
                 <tr
                   key={stock.ticker}
@@ -65,6 +79,9 @@ const StockTable = ({ stocks }: StockTableProps) => {
                     <div className="w-20 h-5 mx-auto opacity-60">
                       <Sparkline basePrice={stock.price} isGain={isGain} seed={stock.price % 17} height={20} />
                     </div>
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell text-center">
+                    <span className={`text-[10px] font-extrabold ${signal.color}`}>{signal.label}</span>
                   </td>
                   <td className="px-4 py-3 text-right hidden md:table-cell">
                     <span className="font-mono text-xs text-muted-foreground">{formatVolume(stock.volume)}</span>

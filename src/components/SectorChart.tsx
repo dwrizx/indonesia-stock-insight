@@ -1,13 +1,25 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { sectorData } from "@/data/stockData";
+import { sectorData, stocks, formatRupiah } from "@/data/stockData";
 import { motion } from "framer-motion";
+import { BarChart, Bar, XAxis, YAxis, Cell as BarCell } from "recharts";
 
 const SectorChart = () => {
   const total = sectorData.reduce((a, b) => a + b.value, 0);
 
+  // Calculate sector performance
+  const sectorPerf = sectorData.map(sector => {
+    const sectorStocks = stocks.filter(s => s.sector === sector.name);
+    const avgChange = sectorStocks.length > 0
+      ? sectorStocks.reduce((a, b) => a + b.changePercent, 0) / sectorStocks.length
+      : 0;
+    return { ...sector, avgChange: parseFloat(avgChange.toFixed(2)), count: sectorStocks.length };
+  });
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const sectorStocks = stocks.filter(s => s.sector === data.name);
+      const avgPE = sectorStocks.filter(s => s.pe > 0).reduce((a, b) => a + b.pe, 0) / (sectorStocks.filter(s => s.pe > 0).length || 1);
       return (
         <div className="rounded-xl bg-popover border border-border p-3 shadow-xl">
           <div className="flex items-center gap-2 mb-1.5">
@@ -15,7 +27,10 @@ const SectorChart = () => {
             <span className="text-xs font-bold text-foreground">{data.name}</span>
           </div>
           <p className="font-mono text-lg font-extrabold text-foreground">{data.value}%</p>
-          <p className="text-[10px] text-muted-foreground">dari total pasar</p>
+          <div className="mt-1.5 space-y-0.5 text-[10px] text-muted-foreground">
+            <p>{sectorStocks.length} saham</p>
+            <p>Avg P/E: {avgPE.toFixed(1)}</p>
+          </div>
         </div>
       );
     }
@@ -59,8 +74,27 @@ const SectorChart = () => {
             </PieChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Mini performance bar */}
+        <div className="w-full">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Performa Hari Ini</p>
+          <div className="h-24">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={sectorPerf} layout="vertical" margin={{ left: 0, right: 5, top: 0, bottom: 0 }}>
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" width={50} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                <Bar dataKey="avgChange" radius={[0, 3, 3, 0]} barSize={8}>
+                  {sectorPerf.map((entry, i) => (
+                    <BarCell key={i} fill={entry.avgChange >= 0 ? "hsl(152, 69%, 46%)" : "hsl(0, 72%, 55%)"} fillOpacity={0.7} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="w-full space-y-2.5">
-          {sectorData.map((s, i) => (
+          {sectorPerf.map((s, i) => (
             <motion.div 
               key={s.name} 
               className="flex items-center gap-3 group cursor-default"
@@ -70,6 +104,9 @@ const SectorChart = () => {
             >
               <div className="h-3 w-3 rounded-sm flex-shrink-0 transition-transform group-hover:scale-125" style={{ backgroundColor: s.color }} />
               <span className="text-xs text-muted-foreground flex-1 group-hover:text-foreground transition-colors">{s.name}</span>
+              <span className={`font-mono text-[10px] font-bold ${s.avgChange >= 0 ? "text-gain" : "text-loss"}`}>
+                {s.avgChange >= 0 ? "+" : ""}{s.avgChange}%
+              </span>
               <div className="flex items-center gap-2">
                 <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden">
                   <motion.div 

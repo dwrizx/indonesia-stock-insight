@@ -9,9 +9,22 @@ interface StockCardProps {
   index: number;
 }
 
+function getSignalBadge(stock: Stock): { label: string; color: string; bg: string } {
+  const score =
+    (stock.pe > 0 && stock.pe < 15 ? 2 : stock.pe > 0 && stock.pe < 25 ? 1 : 0) +
+    (stock.roe > 15 ? 2 : stock.roe > 10 ? 1 : 0) +
+    (stock.dividendYield > 3 ? 1 : 0) +
+    (stock.changePercent > 0 ? 1 : 0) +
+    (stock.beta < 1.2 ? 1 : 0);
+  if (score >= 5) return { label: "BUY", color: "text-gain", bg: "bg-gain/15 border-gain/30" };
+  if (score >= 3) return { label: "HOLD", color: "text-primary", bg: "bg-primary/15 border-primary/30" };
+  return { label: "SELL", color: "text-loss", bg: "bg-loss/15 border-loss/30" };
+}
+
 const StockCard = ({ stock, index }: StockCardProps) => {
   const navigate = useNavigate();
   const isGain = stock.change >= 0;
+  const signal = getSignalBadge(stock);
 
   return (
     <motion.div
@@ -27,8 +40,13 @@ const StockCard = ({ stock, index }: StockCardProps) => {
       
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
 
-      {/* Rank badge */}
-      <div className="absolute top-3 right-3 z-10">
+      {/* Top badges */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        {/* Signal badge */}
+        <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded border ${signal.bg} ${signal.color}`}>
+          {signal.label}
+        </span>
+        {/* Rank badge */}
         <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[9px] font-extrabold ${
           index < 3 
             ? index === 0 ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" 
@@ -42,7 +60,7 @@ const StockCard = ({ stock, index }: StockCardProps) => {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3 pr-8">
+        <div className="flex items-start justify-between mb-3 pr-20">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-mono text-sm font-extrabold text-primary">{stock.ticker.replace(".JK", "")}</h3>

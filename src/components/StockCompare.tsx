@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, Search, ChevronDown, ArrowRight, ExternalLink, BarChart2, Activity, Shield, Target, LineChart } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, ChevronDown, ArrowRight, ExternalLink, BarChart2, Activity, Shield, Target, LineChart, Award } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { stocks, Stock, formatRupiah, formatVolume, generateChartData } from "@/data/stockData";
 import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import RadarCompare from "@/components/RadarCompare";
 
 interface ComparisonPair {
   label: string;
@@ -508,6 +509,51 @@ const StockCompare = () => {
           </div>
         </div>
       </div>
+
+      {/* Radar Chart */}
+      <RadarCompare stockA={stockA} stockB={stockB} />
+
+      {/* Verdict */}
+      {(() => {
+        const scoreA = 
+          (stockA.pe > 0 && stockA.pe < stockB.pe ? 1 : 0) +
+          (stockA.roe > stockB.roe ? 1 : 0) +
+          (stockA.dividendYield > stockB.dividendYield ? 1 : 0) +
+          (stockA.changePercent > stockB.changePercent ? 1 : 0) +
+          (stockA.beta < stockB.beta ? 1 : 0) +
+          (stockA.debtToEquity < stockB.debtToEquity ? 1 : 0);
+        const scoreB = 6 - scoreA;
+        const winner = scoreA > scoreB ? stockA : scoreB > scoreA ? stockB : null;
+        const winnerScore = Math.max(scoreA, scoreB);
+        const reasons: string[] = [];
+        if (stockA.roe > stockB.roe) reasons.push(`ROE lebih tinggi (${stockA.roe.toFixed(1)}% vs ${stockB.roe.toFixed(1)}%)`);
+        else reasons.push(`ROE lebih tinggi (${stockB.roe.toFixed(1)}% vs ${stockA.roe.toFixed(1)}%)`);
+        if (stockA.dividendYield > stockB.dividendYield) reasons.push(`dividen lebih besar`);
+        if (stockA.pe > 0 && stockB.pe > 0 && stockA.pe < stockB.pe) reasons.push(`valuasi lebih murah (P/E ${stockA.pe.toFixed(1)}x)`);
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-primary/30 bg-primary/5 p-5"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">Kesimpulan</h3>
+            </div>
+            {winner ? (
+              <p className="text-xs text-foreground leading-relaxed">
+                <span className="font-mono font-extrabold text-primary">{winner.ticker.replace(".JK", "")}</span> unggul dengan skor{" "}
+                <span className="font-bold">{winnerScore}/6</span> dimensi. Keunggulan utama: {reasons.slice(0, 2).join(", ")}.
+                Namun, keduanya layak dipertimbangkan sesuai profil risiko investor.
+              </p>
+            ) : (
+              <p className="text-xs text-foreground leading-relaxed">
+                Kedua saham memiliki skor yang sama (3/6). Keputusan sebaiknya disesuaikan dengan profil risiko dan tujuan investasi Anda.
+              </p>
+            )}
+          </motion.div>
+        );
+      })()}
 
       {/* Analyst Recommendations */}
       <div className="rounded-xl border border-border bg-card p-5">
