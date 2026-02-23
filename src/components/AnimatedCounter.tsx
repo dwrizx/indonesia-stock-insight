@@ -8,9 +8,17 @@ interface AnimatedCounterProps {
   format?: (val: number) => string;
 }
 
-const AnimatedCounter = ({ value, duration = 1.5, className = "", format }: AnimatedCounterProps) => {
+const AnimatedCounter = ({
+  value,
+  duration = 1.5,
+  className = "",
+  format,
+}: AnimatedCounterProps) => {
   const motionValue = useMotionValue(0);
-  const spring = useSpring(motionValue, { duration: duration * 1000, bounce: 0 });
+  const spring = useSpring(motionValue, {
+    duration: duration * 1000,
+    bounce: 0,
+  });
   const [display, setDisplay] = useState("0");
 
   useEffect(() => {
@@ -19,7 +27,11 @@ const AnimatedCounter = ({ value, duration = 1.5, className = "", format }: Anim
 
   useEffect(() => {
     const unsubscribe = spring.on("change", (latest) => {
-      setDisplay(format ? format(latest) : latest.toLocaleString("id-ID", { maximumFractionDigits: 2 }));
+      setDisplay(
+        format
+          ? format(latest)
+          : latest.toLocaleString("id-ID", { maximumFractionDigits: 2 }),
+      );
     });
     return unsubscribe;
   }, [spring, format]);

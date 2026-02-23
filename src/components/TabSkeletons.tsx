@@ -13,7 +13,10 @@ export const OverviewSkeleton = () => (
     {/* Market Overview skeleton */}
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div
+          key={i}
+          className="rounded-xl border border-border bg-card p-4 space-y-3"
+        >
           <div className="flex items-center justify-between">
             <SkeletonPulse className="h-3 w-16" />
             <SkeletonPulse className="h-5 w-14 rounded-full" />
@@ -58,7 +61,10 @@ export const StocksSkeleton = () => (
     </div>
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div
+          key={i}
+          className="rounded-xl border border-border bg-card p-5 space-y-3"
+        >
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <SkeletonPulse className="h-4 w-14" />
@@ -148,7 +154,10 @@ export const CompareSkeleton = () => (
     </div>
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="grid grid-cols-[1fr,auto,1fr] items-center px-4 py-3 border-b border-border/30">
+        <div
+          key={i}
+          className="grid grid-cols-[1fr,auto,1fr] items-center px-4 py-3 border-b border-border/30"
+        >
           <SkeletonPulse className="h-3 w-20 ml-auto" />
           <SkeletonPulse className="h-3 w-16 mx-3" />
           <SkeletonPulse className="h-3 w-20" />
@@ -195,7 +204,10 @@ export const ScreeningSkeleton = () => (
     </div>
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
+        <div
+          key={i}
+          className="rounded-xl border border-border bg-card overflow-hidden"
+        >
           <div className="px-4 py-2.5 bg-secondary/30 border-b border-border/50 flex justify-between">
             <SkeletonPulse className="h-3 w-28" />
             <SkeletonPulse className="h-5 w-20 rounded-full" />

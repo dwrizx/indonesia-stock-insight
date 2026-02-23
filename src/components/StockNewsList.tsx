@@ -7,9 +7,24 @@ interface StockNewsListProps {
 }
 
 const sentimentConfig = {
-  positive: { icon: TrendingUp, color: "text-gain", bg: "bg-gain/10", label: "Positif" },
-  negative: { icon: TrendingDown, color: "text-loss", bg: "bg-loss/10", label: "Negatif" },
-  neutral: { icon: Minus, color: "text-muted-foreground", bg: "bg-secondary", label: "Netral" },
+  positive: {
+    icon: TrendingUp,
+    color: "text-gain",
+    bg: "bg-gain/10",
+    label: "Positif",
+  },
+  negative: {
+    icon: TrendingDown,
+    color: "text-loss",
+    bg: "bg-loss/10",
+    label: "Negatif",
+  },
+  neutral: {
+    icon: Minus,
+    color: "text-muted-foreground",
+    bg: "bg-secondary",
+    label: "Netral",
+  },
 };
 
 const StockNewsList = ({ ticker }: StockNewsListProps) => {
@@ -31,17 +46,32 @@ const StockNewsList = ({ ticker }: StockNewsListProps) => {
           const config = sentimentConfig[item.sentiment];
           const Icon = config.icon;
           return (
-            <div key={i} className="flex items-start gap-3 rounded-lg bg-secondary/20 p-3 hover:bg-secondary/40 transition-colors">
-              <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${config.bg}`}>
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded-lg bg-secondary/20 p-3 hover:bg-secondary/40 transition-colors"
+            >
+              <div
+                className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${config.bg}`}
+              >
                 <Icon className={`h-3.5 w-3.5 ${config.color}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground leading-relaxed">{item.title}</p>
+                <p className="text-xs font-semibold text-foreground leading-relaxed">
+                  {item.title}
+                </p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[9px] text-muted-foreground">{item.source}</span>
+                  <span className="text-[9px] text-muted-foreground">
+                    {item.source}
+                  </span>
                   <span className="text-[9px] text-muted-foreground/50">•</span>
-                  <span className="text-[9px] text-muted-foreground">{item.time}</span>
-                  <span className={`text-[9px] font-bold ${config.color} ml-auto`}>{config.label}</span>
+                  <span className="text-[9px] text-muted-foreground">
+                    {item.time}
+                  </span>
+                  <span
+                    className={`text-[9px] font-bold ${config.color} ml-auto`}
+                  >
+                    {config.label}
+                  </span>
                 </div>
               </div>
             </div>

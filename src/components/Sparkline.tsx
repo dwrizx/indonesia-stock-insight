@@ -9,10 +9,15 @@ interface SparklineProps {
   height?: number;
 }
 
-const Sparkline = ({ basePrice, isGain, seed = 0, height = 32 }: SparklineProps) => {
+const Sparkline = ({
+  basePrice,
+  isGain,
+  seed = 0,
+  height = 32,
+}: SparklineProps) => {
   const data = useMemo(
     () => generateSparkline(basePrice, 24, seed).map((v, i) => ({ v, i })),
-    [basePrice, seed]
+    [basePrice, seed],
   );
 
   const color = isGain ? "hsl(152, 69%, 46%)" : "hsl(0, 72%, 55%)";

@@ -3,18 +3,24 @@ import { motion } from "framer-motion";
 import { Gauge, TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 const MarketSentiment = () => {
-  const gainCount = stocks.filter(s => s.change >= 0).length;
+  const gainCount = stocks.filter((s) => s.change >= 0).length;
   const totalStocks = stocks.length;
-  const avgChange = stocks.reduce((a, b) => a + b.changePercent, 0) / totalStocks;
+  const avgChange =
+    stocks.reduce((a, b) => a + b.changePercent, 0) / totalStocks;
   const avgVolume = stocks.reduce((a, b) => a + b.volume, 0) / totalStocks;
-  const highVolStocks = stocks.filter(s => s.volume > avgVolume).length;
-  const lowBetaGainers = stocks.filter(s => s.beta < 1 && s.change >= 0).length;
+  const highVolStocks = stocks.filter((s) => s.volume > avgVolume).length;
+  const lowBetaGainers = stocks.filter(
+    (s) => s.beta < 1 && s.change >= 0,
+  ).length;
 
   // Sentiment score: 0 (extreme fear) to 100 (extreme greed)
   const ratioScore = (gainCount / totalStocks) * 40;
-  const changeScore = Math.min(Math.max((avgChange + 3) / 6 * 30, 0), 30);
-  const momentumScore = (highVolStocks / totalStocks) * 15 + (lowBetaGainers / totalStocks) * 15;
-  const score = Math.round(Math.min(Math.max(ratioScore + changeScore + momentumScore, 0), 100));
+  const changeScore = Math.min(Math.max(((avgChange + 3) / 6) * 30, 0), 30);
+  const momentumScore =
+    (highVolStocks / totalStocks) * 15 + (lowBetaGainers / totalStocks) * 15;
+  const score = Math.round(
+    Math.min(Math.max(ratioScore + changeScore + momentumScore, 0), 100),
+  );
 
   const getLabel = (s: number) => {
     if (s >= 80) return { text: "Extreme Greed", color: "text-gain" };
@@ -92,8 +98,12 @@ const MarketSentiment = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <span className="font-mono text-3xl font-extrabold text-foreground">{score}</span>
-          <p className={`text-sm font-bold ${label.color} mt-1`}>{label.text}</p>
+          <span className="font-mono text-3xl font-extrabold text-foreground">
+            {score}
+          </span>
+          <p className={`text-sm font-bold ${label.color} mt-1`}>
+            {label.text}
+          </p>
         </motion.div>
 
         {/* Mini metrics */}
@@ -102,15 +112,20 @@ const MarketSentiment = () => {
             <div className="flex items-center justify-center gap-1 mb-1">
               <TrendingUp className="h-3 w-3 text-gain" />
             </div>
-            <p className="font-mono text-xs font-bold text-foreground">{gainCount}/{totalStocks}</p>
+            <p className="font-mono text-xs font-bold text-foreground">
+              {gainCount}/{totalStocks}
+            </p>
             <p className="text-[9px] text-muted-foreground">Naik</p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Activity className="h-3 w-3 text-primary" />
             </div>
-            <p className={`font-mono text-xs font-bold ${avgChange >= 0 ? "text-gain" : "text-loss"}`}>
-              {avgChange >= 0 ? "+" : ""}{avgChange.toFixed(2)}%
+            <p
+              className={`font-mono text-xs font-bold ${avgChange >= 0 ? "text-gain" : "text-loss"}`}
+            >
+              {avgChange >= 0 ? "+" : ""}
+              {avgChange.toFixed(2)}%
             </p>
             <p className="text-[9px] text-muted-foreground">Avg Δ</p>
           </div>
@@ -118,7 +133,9 @@ const MarketSentiment = () => {
             <div className="flex items-center justify-center gap-1 mb-1">
               <TrendingDown className="h-3 w-3 text-loss" />
             </div>
-            <p className="font-mono text-xs font-bold text-foreground">{totalStocks - gainCount}/{totalStocks}</p>
+            <p className="font-mono text-xs font-bold text-foreground">
+              {totalStocks - gainCount}/{totalStocks}
+            </p>
             <p className="text-[9px] text-muted-foreground">Turun</p>
           </div>
         </div>

@@ -8,16 +8,20 @@ const SearchBar = () => {
   const [focused, setFocused] = useState(false);
   const navigate = useNavigate();
 
-  const filtered = query.length > 0
-    ? stocks.filter(s =>
-        s.ticker.toLowerCase().includes(query.toLowerCase()) ||
-        s.name.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
+  const filtered =
+    query.length > 0
+      ? stocks.filter(
+          (s) =>
+            s.ticker.toLowerCase().includes(query.toLowerCase()) ||
+            s.name.toLowerCase().includes(query.toLowerCase()),
+        )
+      : [];
 
   return (
     <div className="relative w-full max-w-md">
-      <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-all ${focused ? "border-primary glow-primary" : "border-border bg-secondary/50"}`}>
+      <div
+        className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-all ${focused ? "border-primary glow-primary" : "border-border bg-secondary/50"}`}
+      >
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
           type="text"
@@ -41,11 +45,16 @@ const SearchBar = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <span className="font-mono font-semibold text-primary">{stock.ticker.replace(".JK", "")}</span>
+                <span className="font-mono font-semibold text-primary">
+                  {stock.ticker.replace(".JK", "")}
+                </span>
                 <span className="text-muted-foreground">{stock.name}</span>
               </div>
-              <span className={`font-mono text-xs ${stock.change >= 0 ? "text-gain" : "text-loss"}`}>
-                {stock.change >= 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
+              <span
+                className={`font-mono text-xs ${stock.change >= 0 ? "text-gain" : "text-loss"}`}
+              >
+                {stock.change >= 0 ? "+" : ""}
+                {stock.changePercent.toFixed(2)}%
               </span>
             </button>
           ))}

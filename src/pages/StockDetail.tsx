@@ -1,6 +1,23 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge, Sun, Moon, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  ExternalLink,
+  Activity,
+  DollarSign,
+  PieChart,
+  BarChart2,
+  Shield,
+  Target,
+  LineChart,
+  Gauge,
+  Sun,
+  Moon,
+  ChevronRight,
+} from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
 import { stocks, formatRupiah, formatVolume } from "@/data/stockData";
@@ -21,8 +38,13 @@ const StockDetail = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-lg font-semibold text-foreground">Saham tidak ditemukan</p>
-          <button onClick={() => navigate("/")} className="mt-4 text-sm text-primary hover:underline">
+          <p className="text-lg font-semibold text-foreground">
+            Saham tidak ditemukan
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="mt-4 text-sm text-primary hover:underline"
+          >
             Kembali ke Dashboard
           </button>
         </div>
@@ -31,24 +53,61 @@ const StockDetail = () => {
   }
 
   const isGain = stock.change >= 0;
-  const pricePosition = ((stock.price - stock.low52w) / (stock.high52w - stock.low52w)) * 100;
+  const pricePosition =
+    ((stock.price - stock.low52w) / (stock.high52w - stock.low52w)) * 100;
   const dayRange = ((stock.price - stock.low) / (stock.high - stock.low)) * 100;
 
   const tradingInfo = [
-    { label: "Open", value: `Rp${stock.open.toLocaleString("id-ID")}`, icon: Activity },
-    { label: "High", value: `Rp${stock.high.toLocaleString("id-ID")}`, icon: TrendingUp },
-    { label: "Low", value: `Rp${stock.low.toLocaleString("id-ID")}`, icon: TrendingDown },
-    { label: "Prev Close", value: `Rp${stock.prevClose.toLocaleString("id-ID")}`, icon: BarChart2 },
+    {
+      label: "Open",
+      value: `Rp${stock.open.toLocaleString("id-ID")}`,
+      icon: Activity,
+    },
+    {
+      label: "High",
+      value: `Rp${stock.high.toLocaleString("id-ID")}`,
+      icon: TrendingUp,
+    },
+    {
+      label: "Low",
+      value: `Rp${stock.low.toLocaleString("id-ID")}`,
+      icon: TrendingDown,
+    },
+    {
+      label: "Prev Close",
+      value: `Rp${stock.prevClose.toLocaleString("id-ID")}`,
+      icon: BarChart2,
+    },
     { label: "Volume", value: formatVolume(stock.volume), icon: BarChart2 },
-    { label: "Market Cap", value: formatRupiah(stock.marketCap), icon: DollarSign },
+    {
+      label: "Market Cap",
+      value: formatRupiah(stock.marketCap),
+      icon: DollarSign,
+    },
   ];
 
   const fundamentals = [
-    { label: "P/E Ratio", value: stock.pe > 0 ? stock.pe.toFixed(1) : "N/A", highlight: stock.pe > 0 && stock.pe < 15 },
+    {
+      label: "P/E Ratio",
+      value: stock.pe > 0 ? stock.pe.toFixed(1) : "N/A",
+      highlight: stock.pe > 0 && stock.pe < 15,
+    },
     { label: "P/BV", value: stock.pbv.toFixed(1), highlight: stock.pbv < 2 },
-    { label: "EPS", value: `Rp${stock.eps.toLocaleString("id-ID")}`, highlight: stock.eps > 0 },
-    { label: "ROE", value: `${stock.roe.toFixed(1)}%`, highlight: stock.roe > 15 },
-    { label: "Div. Yield", value: `${stock.dividendYield.toFixed(1)}%`, highlight: stock.dividendYield > 3 },
+    {
+      label: "EPS",
+      value: `Rp${stock.eps.toLocaleString("id-ID")}`,
+      highlight: stock.eps > 0,
+    },
+    {
+      label: "ROE",
+      value: `${stock.roe.toFixed(1)}%`,
+      highlight: stock.roe > 15,
+    },
+    {
+      label: "Div. Yield",
+      value: `${stock.dividendYield.toFixed(1)}%`,
+      highlight: stock.dividendYield > 3,
+    },
     { label: "Beta", value: stock.beta.toFixed(2) },
     { label: "D/E Ratio", value: stock.debtToEquity.toFixed(1) },
     { label: "52W High", value: `Rp${stock.high52w.toLocaleString("id-ID")}` },
@@ -62,16 +121,24 @@ const StockDetail = () => {
       <header className="border-b border-border bg-card/60 backdrop-blur-xl sticky top-0 z-40">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent px-2.5 py-1.5">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent px-2.5 py-1.5"
+            >
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </button>
             <div className="h-5 w-px bg-border" />
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link
+              to="/"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-primary/20">
                 <BarChart3 className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-sm font-extrabold gradient-text hidden sm:inline">IDX Saham</span>
+              <span className="text-sm font-extrabold gradient-text hidden sm:inline">
+                IDX Saham
+              </span>
             </Link>
           </div>
           <button
@@ -79,7 +146,11 @@ const StockDetail = () => {
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/50 text-foreground transition-colors hover:bg-accent"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </button>
         </div>
       </header>
@@ -87,9 +158,13 @@ const StockDetail = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6">
-          <Link to="/" className="hover:text-primary transition-colors">Dashboard</Link>
+          <Link to="/" className="hover:text-primary transition-colors">
+            Dashboard
+          </Link>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground font-semibold">{stock.ticker.replace(".JK", "")}</span>
+          <span className="text-foreground font-semibold">
+            {stock.ticker.replace(".JK", "")}
+          </span>
         </nav>
 
         {/* Stock Hero */}
@@ -104,36 +179,64 @@ const StockDetail = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
             <div className="relative p-6 md:p-8">
               <div className="flex flex-wrap items-start justify-between gap-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">{stock.ticker.replace(".JK", "")}</h1>
-                      <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">{stock.sector}</span>
-                      {(() => {
-                        let score = 0;
-                        if (stock.pe > 0 && stock.pe < 15) score += 2;
-                        else if (stock.pe > 0 && stock.pe < 20) score += 1;
-                        if (stock.roe > 15) score += 2;
-                        if (stock.dividendYield > 3) score += 1;
-                        if (stock.changePercent > 0) score += 1;
-                        const signal = score >= 5 ? "BUY" : score >= 3 ? "HOLD" : "SELL";
-                        const signalColor = signal === "BUY" ? "bg-gain/15 text-gain border-gain/25" : signal === "HOLD" ? "bg-primary/15 text-primary border-primary/25" : "bg-loss/15 text-loss border-loss/25";
-                        return (
-                          <span className={`rounded-lg border px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${signalColor}`}>
-                            {signal}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{stock.name}</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
+                      {stock.ticker.replace(".JK", "")}
+                    </h1>
+                    <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">
+                      {stock.sector}
+                    </span>
+                    {(() => {
+                      let score = 0;
+                      if (stock.pe > 0 && stock.pe < 15) score += 2;
+                      else if (stock.pe > 0 && stock.pe < 20) score += 1;
+                      if (stock.roe > 15) score += 2;
+                      if (stock.dividendYield > 3) score += 1;
+                      if (stock.changePercent > 0) score += 1;
+                      const signal =
+                        score >= 5 ? "BUY" : score >= 3 ? "HOLD" : "SELL";
+                      const signalColor =
+                        signal === "BUY"
+                          ? "bg-gain/15 text-gain border-gain/25"
+                          : signal === "HOLD"
+                            ? "bg-primary/15 text-primary border-primary/25"
+                            : "bg-loss/15 text-loss border-loss/25";
+                      return (
+                        <span
+                          className={`rounded-lg border px-2.5 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${signalColor}`}
+                        >
+                          {signal}
+                        </span>
+                      );
+                    })()}
                   </div>
+                  <p className="text-sm text-muted-foreground">{stock.name}</p>
+                </div>
                 <div className="text-right">
                   <p className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
-                    Rp<AnimatedCounter value={stock.price} format={(v) => Math.round(v).toLocaleString("id-ID")} />
+                    Rp
+                    <AnimatedCounter
+                      value={stock.price}
+                      format={(v) => Math.round(v).toLocaleString("id-ID")}
+                    />
                   </p>
-                  <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${isGain ? "bg-gain/10 border border-gain/20 text-gain" : "bg-loss/10 border border-loss/20 text-loss"}`}>
-                    {isGain ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                    <span>{isGain ? "+" : ""}{stock.change.toLocaleString("id-ID")}</span>
-                    <span className="opacity-70">({isGain ? "+" : ""}{stock.changePercent.toFixed(2)}%)</span>
+                  <div
+                    className={`mt-2 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${isGain ? "bg-gain/10 border border-gain/20 text-gain" : "bg-loss/10 border border-loss/20 text-loss"}`}
+                  >
+                    {isGain ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
+                    <span>
+                      {isGain ? "+" : ""}
+                      {stock.change.toLocaleString("id-ID")}
+                    </span>
+                    <span className="opacity-70">
+                      ({isGain ? "+" : ""}
+                      {stock.changePercent.toFixed(2)}%)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -142,33 +245,49 @@ const StockDetail = () => {
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {/* Day Range */}
                 <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">Rentang Hari Ini</p>
+                  <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">
+                    Rentang Hari Ini
+                  </p>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-loss font-semibold">Rp{stock.low.toLocaleString("id-ID")}</span>
+                    <span className="font-mono text-[11px] text-loss font-semibold">
+                      Rp{stock.low.toLocaleString("id-ID")}
+                    </span>
                     <div className="relative flex-1 h-2 rounded-full bg-secondary overflow-hidden">
                       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-loss/40 via-primary/20 to-gain/40" />
                       <div
                         className="absolute top-1/2 -translate-y-1/2 h-4 w-1.5 rounded-full bg-primary shadow-lg shadow-primary/50"
-                        style={{ left: `${Math.min(Math.max(dayRange, 3), 97)}%` }}
+                        style={{
+                          left: `${Math.min(Math.max(dayRange, 3), 97)}%`,
+                        }}
                       />
                     </div>
-                    <span className="font-mono text-[11px] text-gain font-semibold">Rp{stock.high.toLocaleString("id-ID")}</span>
+                    <span className="font-mono text-[11px] text-gain font-semibold">
+                      Rp{stock.high.toLocaleString("id-ID")}
+                    </span>
                   </div>
                 </div>
 
                 {/* 52W Range */}
                 <div className="rounded-xl bg-card/50 border border-border/50 p-4">
-                  <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">Rentang 52 Minggu</p>
+                  <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">
+                    Rentang 52 Minggu
+                  </p>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-loss font-semibold">Rp{stock.low52w.toLocaleString("id-ID")}</span>
+                    <span className="font-mono text-[11px] text-loss font-semibold">
+                      Rp{stock.low52w.toLocaleString("id-ID")}
+                    </span>
                     <div className="relative flex-1 h-2 rounded-full bg-secondary overflow-hidden">
                       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-loss/40 via-primary/20 to-gain/40" />
                       <div
                         className="absolute top-1/2 -translate-y-1/2 h-4 w-1.5 rounded-full bg-primary shadow-lg shadow-primary/50"
-                        style={{ left: `${Math.min(Math.max(pricePosition, 3), 97)}%` }}
+                        style={{
+                          left: `${Math.min(Math.max(pricePosition, 3), 97)}%`,
+                        }}
                       />
                     </div>
-                    <span className="font-mono text-[11px] text-gain font-semibold">Rp{stock.high52w.toLocaleString("id-ID")}</span>
+                    <span className="font-mono text-[11px] text-gain font-semibold">
+                      Rp{stock.high52w.toLocaleString("id-ID")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -213,7 +332,10 @@ const StockDetail = () => {
             {activeTab === "chart" ? (
               <StockChart basePrice={stock.price} ticker={stock.ticker} />
             ) : (
-              <TechnicalAnalysis basePrice={stock.price} ticker={stock.ticker} />
+              <TechnicalAnalysis
+                basePrice={stock.price}
+                ticker={stock.ticker}
+              />
             )}
           </motion.div>
 
@@ -232,11 +354,18 @@ const StockDetail = () => {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {tradingInfo.map((m) => {
-                  const isPositive = m.label === "High" || (m.label === "Volume");
+                  const isPositive = m.label === "High" || m.label === "Volume";
                   return (
-                    <div key={m.label} className={`rounded-lg p-3 ${isPositive ? "bg-gain/5 border border-gain/10" : "bg-secondary/40"}`}>
-                      <p className="text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">{m.label}</p>
-                      <p className="font-mono text-xs font-bold text-foreground">{m.value}</p>
+                    <div
+                      key={m.label}
+                      className={`rounded-lg p-3 ${isPositive ? "bg-gain/5 border border-gain/10" : "bg-secondary/40"}`}
+                    >
+                      <p className="text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">
+                        {m.label}
+                      </p>
+                      <p className="font-mono text-xs font-bold text-foreground">
+                        {m.value}
+                      </p>
                     </div>
                   );
                 })}
@@ -251,9 +380,18 @@ const StockDetail = () => {
               </h3>
               <div className="space-y-3">
                 {fundamentals.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between pb-2.5 border-b border-border/30 last:border-0 last:pb-0">
-                    <span className="text-xs text-muted-foreground">{m.label}</span>
-                    <span className={`font-mono text-xs font-bold ${m.highlight ? "text-gain" : "text-foreground"}`}>{m.value}</span>
+                  <div
+                    key={m.label}
+                    className="flex items-center justify-between pb-2.5 border-b border-border/30 last:border-0 last:pb-0"
+                  >
+                    <span className="text-xs text-muted-foreground">
+                      {m.label}
+                    </span>
+                    <span
+                      className={`font-mono text-xs font-bold ${m.highlight ? "text-gain" : "text-foreground"}`}
+                    >
+                      {m.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -267,19 +405,47 @@ const StockDetail = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { label: "Valuasi", score: stock.pe > 0 && stock.pe < 20 ? 75 : 40, color: stock.pe > 0 && stock.pe < 20 ? "bg-gain" : "bg-loss" },
-                  { label: "Profitabilitas", score: stock.roe > 0 ? Math.min(stock.roe * 4, 100) : 10, color: stock.roe > 15 ? "bg-gain" : "bg-primary" },
-                  { label: "Dividen", score: Math.min(stock.dividendYield * 15, 100), color: stock.dividendYield > 3 ? "bg-gain" : "bg-primary" },
-                  { label: "Momentum", score: isGain ? 70 : 35, color: isGain ? "bg-gain" : "bg-loss" },
-                  { label: "Risiko", score: Math.max(100 - stock.beta * 50, 10), color: stock.beta < 1 ? "bg-gain" : "bg-loss" },
+                  {
+                    label: "Valuasi",
+                    score: stock.pe > 0 && stock.pe < 20 ? 75 : 40,
+                    color:
+                      stock.pe > 0 && stock.pe < 20 ? "bg-gain" : "bg-loss",
+                  },
+                  {
+                    label: "Profitabilitas",
+                    score: stock.roe > 0 ? Math.min(stock.roe * 4, 100) : 10,
+                    color: stock.roe > 15 ? "bg-gain" : "bg-primary",
+                  },
+                  {
+                    label: "Dividen",
+                    score: Math.min(stock.dividendYield * 15, 100),
+                    color: stock.dividendYield > 3 ? "bg-gain" : "bg-primary",
+                  },
+                  {
+                    label: "Momentum",
+                    score: isGain ? 70 : 35,
+                    color: isGain ? "bg-gain" : "bg-loss",
+                  },
+                  {
+                    label: "Risiko",
+                    score: Math.max(100 - stock.beta * 50, 10),
+                    color: stock.beta < 1 ? "bg-gain" : "bg-loss",
+                  },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between mb-1">
-                      <span className="text-[10px] text-muted-foreground">{item.label}</span>
-                      <span className="font-mono text-[10px] font-bold text-foreground">{Math.round(item.score)}/100</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {item.label}
+                      </span>
+                      <span className="font-mono text-[10px] font-bold text-foreground">
+                        {Math.round(item.score)}/100
+                      </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                      <div className={`h-full rounded-full ${item.color} transition-all`} style={{ width: `${item.score}%` }} />
+                      <div
+                        className={`h-full rounded-full ${item.color} transition-all`}
+                        style={{ width: `${item.score}%` }}
+                      />
                     </div>
                   </div>
                 ))}
@@ -297,14 +463,23 @@ const StockDetail = () => {
                   { label: "Conservative", mult: stock.roe > 15 ? 1.05 : 1.02 },
                   { label: "Moderate", mult: stock.roe > 15 ? 1.12 : 1.07 },
                   { label: "Aggressive", mult: stock.roe > 15 ? 1.22 : 1.15 },
-                ].map(t => {
+                ].map((t) => {
                   const target = Math.round(stock.price * t.mult);
                   const upside = ((target / stock.price - 1) * 100).toFixed(1);
                   return (
-                    <div key={t.label} className="rounded-lg bg-secondary/40 p-3 text-center">
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">{t.label}</p>
-                      <p className="font-mono text-xs font-bold text-foreground">Rp{target.toLocaleString("id-ID")}</p>
-                      <p className="font-mono text-[10px] font-bold text-gain">+{upside}%</p>
+                    <div
+                      key={t.label}
+                      className="rounded-lg bg-secondary/40 p-3 text-center"
+                    >
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">
+                        {t.label}
+                      </p>
+                      <p className="font-mono text-xs font-bold text-foreground">
+                        Rp{target.toLocaleString("id-ID")}
+                      </p>
+                      <p className="font-mono text-[10px] font-bold text-gain">
+                        +{upside}%
+                      </p>
                     </div>
                   );
                 })}
@@ -319,23 +494,72 @@ const StockDetail = () => {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {(() => {
-                  const rsi14 = Math.max(10, Math.min(90, 50 + stock.changePercent * 5 - (stock.beta - 1) * 10 + (stock.ticker.charCodeAt(2) % 15)));
+                  const rsi14 = Math.max(
+                    10,
+                    Math.min(
+                      90,
+                      50 +
+                        stock.changePercent * 5 -
+                        (stock.beta - 1) * 10 +
+                        (stock.ticker.charCodeAt(2) % 15),
+                    ),
+                  );
                   const rsi12 = rsi14 + 2;
-                  const macd = +(stock.changePercent * 0.8 + (stock.roe > 15 ? 0.5 : -0.3)).toFixed(2);
-                  const volRatio = +(0.8 + Math.abs(stock.changePercent) * 0.15 + (stock.volume > 50e6 ? 0.3 : 0)).toFixed(2);
+                  const macd = +(
+                    stock.changePercent * 0.8 +
+                    (stock.roe > 15 ? 0.5 : -0.3)
+                  ).toFixed(2);
+                  const volRatio = +(
+                    0.8 +
+                    Math.abs(stock.changePercent) * 0.15 +
+                    (stock.volume > 50e6 ? 0.3 : 0)
+                  ).toFixed(2);
                   return [
-                    { label: "RSI (14)", value: rsi14.toFixed(0), warn: rsi14 > 70 || rsi14 < 30 },
-                    { label: "RSI (12)", value: rsi12.toFixed(0), warn: rsi12 > 70 || rsi12 < 30 },
-                    { label: "MACD", value: macd > 0 ? `+${macd}` : `${macd}`, positive: macd > 0 },
-                    { label: "Vol Ratio", value: `${volRatio}x`, positive: volRatio > 1 },
-                  ].map(ind => (
-                    <div key={ind.label} className={`rounded-lg p-3 text-center border ${
-                      ind.warn ? "bg-loss/10 border-loss/20" : ind.positive ? "bg-gain/10 border-gain/20" : "bg-secondary/40 border-border/50"
-                    }`}>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">{ind.label}</p>
-                      <p className={`font-mono text-sm font-bold ${
-                        ind.warn ? "text-loss" : ind.positive ? "text-gain" : "text-foreground"
-                      }`}>{ind.value}</p>
+                    {
+                      label: "RSI (14)",
+                      value: rsi14.toFixed(0),
+                      warn: rsi14 > 70 || rsi14 < 30,
+                    },
+                    {
+                      label: "RSI (12)",
+                      value: rsi12.toFixed(0),
+                      warn: rsi12 > 70 || rsi12 < 30,
+                    },
+                    {
+                      label: "MACD",
+                      value: macd > 0 ? `+${macd}` : `${macd}`,
+                      positive: macd > 0,
+                    },
+                    {
+                      label: "Vol Ratio",
+                      value: `${volRatio}x`,
+                      positive: volRatio > 1,
+                    },
+                  ].map((ind) => (
+                    <div
+                      key={ind.label}
+                      className={`rounded-lg p-3 text-center border ${
+                        ind.warn
+                          ? "bg-loss/10 border-loss/20"
+                          : ind.positive
+                            ? "bg-gain/10 border-gain/20"
+                            : "bg-secondary/40 border-border/50"
+                      }`}
+                    >
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">
+                        {ind.label}
+                      </p>
+                      <p
+                        className={`font-mono text-sm font-bold ${
+                          ind.warn
+                            ? "text-loss"
+                            : ind.positive
+                              ? "text-gain"
+                              : "text-foreground"
+                        }`}
+                      >
+                        {ind.value}
+                      </p>
                     </div>
                   ));
                 })()}

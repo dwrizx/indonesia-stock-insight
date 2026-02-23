@@ -1,5 +1,13 @@
 import { Stock } from "@/data/stockData";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from "recharts";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { motion } from "framer-motion";
 import { Crosshair } from "lucide-react";
 
@@ -10,7 +18,9 @@ interface RadarCompareProps {
 
 function normalize(value: number, min: number, max: number): number {
   if (max === min) return 50;
-  return Math.round(Math.min(Math.max(((value - min) / (max - min)) * 100, 0), 100));
+  return Math.round(
+    Math.min(Math.max(((value - min) / (max - min)) * 100, 0), 100),
+  );
 }
 
 const RadarCompare = ({ stockA, stockB }: RadarCompareProps) => {
@@ -55,9 +65,14 @@ const RadarCompare = ({ stockA, stockB }: RadarCompareProps) => {
     >
       <div className="flex items-center gap-2 mb-4">
         <Crosshair className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-bold text-foreground">Analisis Multi-Dimensi</h3>
+        <h3 className="text-sm font-bold text-foreground">
+          Analisis Multi-Dimensi
+        </h3>
       </div>
-      <p className="text-[10px] text-muted-foreground mb-4">Perbandingan 5 dimensi: Valuasi, Profitabilitas, Dividen, Momentum, dan Stabilitas</p>
+      <p className="text-[10px] text-muted-foreground mb-4">
+        Perbandingan 5 dimensi: Valuasi, Profitabilitas, Dividen, Momentum, dan
+        Stabilitas
+      </p>
 
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
@@ -91,7 +106,13 @@ const RadarCompare = ({ stockA, stockB }: RadarCompareProps) => {
             />
             <Legend
               wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
-              formatter={(value) => <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>{value}</span>}
+              formatter={(value) => (
+                <span
+                  style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                >
+                  {value}
+                </span>
+              )}
             />
           </RadarChart>
         </ResponsiveContainer>

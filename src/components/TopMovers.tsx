@@ -1,5 +1,12 @@
 import { stocks } from "@/data/stockData";
-import { TrendingUp, TrendingDown, Flame, AlertTriangle, Trophy, Medal } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Flame,
+  AlertTriangle,
+  Trophy,
+  Medal,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Sparkline from "@/components/Sparkline";
@@ -13,10 +20,18 @@ const rankColors = [
 const TopMovers = () => {
   const navigate = useNavigate();
   const sorted = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
-  const gainers = sorted.filter(s => s.change >= 0).slice(0, 5);
-  const losers = sorted.filter(s => s.change < 0).reverse().slice(0, 5);
+  const gainers = sorted.filter((s) => s.change >= 0).slice(0, 5);
+  const losers = sorted
+    .filter((s) => s.change < 0)
+    .reverse()
+    .slice(0, 5);
 
-  const renderList = (items: typeof stocks, label: string, icon: React.ReactNode, isGainer: boolean) => (
+  const renderList = (
+    items: typeof stocks,
+    label: string,
+    icon: React.ReactNode,
+    isGainer: boolean,
+  ) => (
     <motion.div
       initial={{ opacity: 0, x: isGainer ? -20 : 20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -40,20 +55,36 @@ const TopMovers = () => {
             }`}
           >
             {/* Rank badge */}
-            <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-extrabold border flex-shrink-0 ${
-              i < 3 ? rankColors[i] : "bg-secondary text-muted-foreground border-border"
-            }`}>
+            <span
+              className={`flex items-center justify-center h-6 w-6 rounded-full text-[10px] font-extrabold border flex-shrink-0 ${
+                i < 3
+                  ? rankColors[i]
+                  : "bg-secondary text-muted-foreground border-border"
+              }`}
+            >
               {i + 1}
             </span>
-            <span className="font-mono text-[11px] font-extrabold text-primary w-12 text-left">{stock.ticker.replace(".JK", "")}</span>
-            <span className="text-xs text-muted-foreground flex-1 text-left hidden sm:block truncate">{stock.name}</span>
+            <span className="font-mono text-[11px] font-extrabold text-primary w-12 text-left">
+              {stock.ticker.replace(".JK", "")}
+            </span>
+            <span className="text-xs text-muted-foreground flex-1 text-left hidden sm:block truncate">
+              {stock.name}
+            </span>
             <div className="w-20 h-6 opacity-40 group-hover:opacity-90 transition-opacity">
-              <Sparkline basePrice={stock.price} isGain={isGainer} seed={i * 3 + (isGainer ? 0 : 50)} height={24} />
+              <Sparkline
+                basePrice={stock.price}
+                isGain={isGainer}
+                seed={i * 3 + (isGainer ? 0 : 50)}
+                height={24}
+              />
             </div>
-            <span className={`font-mono text-xs font-bold rounded-md px-2 py-1 ${
-              isGainer ? "bg-gain/10 text-gain" : "bg-loss/10 text-loss"
-            }`}>
-              {stock.change >= 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
+            <span
+              className={`font-mono text-xs font-bold rounded-md px-2 py-1 ${
+                isGainer ? "bg-gain/10 text-gain" : "bg-loss/10 text-loss"
+              }`}
+            >
+              {stock.change >= 0 ? "+" : ""}
+              {stock.changePercent.toFixed(2)}%
             </span>
           </motion.button>
         ))}
@@ -63,8 +94,18 @@ const TopMovers = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {renderList(gainers, "Top Gainers", <Flame className="h-4 w-4 text-gain" />, true)}
-      {renderList(losers, "Top Losers", <AlertTriangle className="h-4 w-4 text-loss" />, false)}
+      {renderList(
+        gainers,
+        "Top Gainers",
+        <Flame className="h-4 w-4 text-gain" />,
+        true,
+      )}
+      {renderList(
+        losers,
+        "Top Losers",
+        <AlertTriangle className="h-4 w-4 text-loss" />,
+        false,
+      )}
     </div>
   );
 };

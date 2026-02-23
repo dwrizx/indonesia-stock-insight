@@ -26,18 +26,18 @@
 
 ## ✨ Fitur Utama
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| 📊 **Market Overview** | Pantau indeks utama — IHSG, LQ45, IDX30, JII — dengan ringkasan pasar harian |
-| 🔥 **Top Movers** | Saham dengan kenaikan & penurunan terbesar hari ini (gainers & losers) |
-| 🏆 **Most Active** | Saham dengan volume perdagangan tertinggi di pasar |
-| 🗺️ **Heat Map** | Visualisasi sektor pasar berdasarkan market cap relatif dengan warna dinamis |
-| 🔍 **Stock Screening** | Filter saham berdasarkan kategori, valuasi, verdict, kepatuhan Syariah, dan ticker |
-| 📈 **Stock Detail** | Analisis mendalam: chart interaktif, indikator teknikal, price targets, berita terkait |
-| ⚖️ **Stock Compare** | Bandingkan hingga 4 saham secara berdampingan dengan radar chart |
-| 🎯 **Signal Badge** | Sinyal otomatis BUY / HOLD / SELL berdasarkan skor fundamental |
-| 🌙 **Dark & Light Mode** | Tema gelap dan terang yang bisa ditoggle sesuai preferensi |
-| 📱 **Responsive** | Tampilan optimal di desktop, tablet, dan mobile |
+| Fitur                    | Deskripsi                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| 📊 **Market Overview**   | Pantau indeks utama — IHSG, LQ45, IDX30, JII — dengan ringkasan pasar harian           |
+| 🔥 **Top Movers**        | Saham dengan kenaikan & penurunan terbesar hari ini (gainers & losers)                 |
+| 🏆 **Most Active**       | Saham dengan volume perdagangan tertinggi di pasar                                     |
+| 🗺️ **Heat Map**          | Visualisasi sektor pasar berdasarkan market cap relatif dengan warna dinamis           |
+| 🔍 **Stock Screening**   | Filter saham berdasarkan kategori, valuasi, verdict, kepatuhan Syariah, dan ticker     |
+| 📈 **Stock Detail**      | Analisis mendalam: chart interaktif, indikator teknikal, price targets, berita terkait |
+| ⚖️ **Stock Compare**     | Bandingkan hingga 4 saham secara berdampingan dengan radar chart                       |
+| 🎯 **Signal Badge**      | Sinyal otomatis BUY / HOLD / SELL berdasarkan skor fundamental                         |
+| 🌙 **Dark & Light Mode** | Tema gelap dan terang yang bisa ditoggle sesuai preferensi                             |
+| 📱 **Responsive**        | Tampilan optimal di desktop, tablet, dan mobile                                        |
 
 ---
 
@@ -46,6 +46,7 @@
 Fitur screening memungkinkan penyaringan saham secara mendalam:
 
 ### Filter yang Tersedia
+
 - **Kategori:** Semua, Blue Chip, High Dividend, Growth, Value
 - **Valuasi:** All, Undervalued, Fair Value, Overvalued
 - **Verdict:** All Verdicts, Strong Buy, Buy, Hold, Sell, Strong Sell
@@ -53,6 +54,7 @@ Fitur screening memungkinkan penyaringan saham secara mendalam:
 - **Ticker:** Klik ticker chips untuk toggle aktif/non-aktif
 
 ### Informasi per Kartu Screening
+
 - **Verdict Badge** — warna-coded (Strong Buy = hijau, Hold = kuning, Sell = merah)
 - **Harga & Perubahan** — last close price dengan persentase perubahan
 - **Signal Chips** — sinyal 1W, 1M, 3M+ dengan warna hijau/merah/netral
@@ -65,38 +67,39 @@ Fitur screening memungkinkan penyaringan saham secara mendalam:
 
 Setiap saham memiliki halaman detail lengkap:
 
-| Section | Konten |
-|---------|--------|
-| **Hero** | Ticker, nama, harga, perubahan %, signal badge (BUY/HOLD/SELL) |
-| **Chart** | Grafik harga interaktif dengan pilihan periode (1M, 3M, 6M, 1Y) |
-| **Price Targets** | Target harga Conservative, Moderate, Aggressive |
-| **Key Indicators** | Mini cards RSI, MACD, Volume Ratio di sidebar |
-| **Peer Comparison** | Perbandingan dengan saham sejenis di sektor yang sama |
-| **Technical Analysis** | Indikator teknikal lengkap |
-| **Berita** | Berita terkait saham dengan sentimen positif/negatif/netral |
+| Section                | Konten                                                          |
+| ---------------------- | --------------------------------------------------------------- |
+| **Hero**               | Ticker, nama, harga, perubahan %, signal badge (BUY/HOLD/SELL)  |
+| **Chart**              | Grafik harga interaktif dengan pilihan periode (1M, 3M, 6M, 1Y) |
+| **Price Targets**      | Target harga Conservative, Moderate, Aggressive                 |
+| **Key Indicators**     | Mini cards RSI, MACD, Volume Ratio di sidebar                   |
+| **Peer Comparison**    | Perbandingan dengan saham sejenis di sektor yang sama           |
+| **Technical Analysis** | Indikator teknikal lengkap                                      |
+| **Berita**             | Berita terkait saham dengan sentimen positif/negatif/netral     |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Kategori | Teknologi |
-|----------|-----------|
-| **Framework** | [React 18](https://react.dev) + [TypeScript](https://typescriptlang.org) |
-| **Build Tool** | [Vite 5](https://vitejs.dev) |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) |
-| **Charts** | [Recharts](https://recharts.org) |
-| **Animations** | [Framer Motion](https://www.framer.com/motion) |
-| **Icons** | [Lucide React](https://lucide.dev) |
-| **Routing** | [React Router v6](https://reactrouter.com) |
-| **State Management** | [TanStack React Query](https://tanstack.com/query) |
-| **Form Handling** | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) |
-| **Theme** | [next-themes](https://github.com/pacocoursey/next-themes) |
+| Kategori             | Teknologi                                                                    |
+| -------------------- | ---------------------------------------------------------------------------- |
+| **Framework**        | [React 18](https://react.dev) + [TypeScript](https://typescriptlang.org)     |
+| **Build Tool**       | [Vite 5](https://vitejs.dev)                                                 |
+| **Styling**          | [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) |
+| **Charts**           | [Recharts](https://recharts.org)                                             |
+| **Animations**       | [Framer Motion](https://www.framer.com/motion)                               |
+| **Icons**            | [Lucide React](https://lucide.dev)                                           |
+| **Routing**          | [React Router v6](https://reactrouter.com)                                   |
+| **State Management** | [TanStack React Query](https://tanstack.com/query)                           |
+| **Form Handling**    | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev)      |
+| **Theme**            | [next-themes](https://github.com/pacocoursey/next-themes)                    |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prasyarat
+
 - [Node.js](https://nodejs.org) v18+ atau [Bun](https://bun.sh)
 - npm, yarn, atau bun sebagai package manager
 
@@ -126,6 +129,39 @@ Buka [http://localhost:5173](http://localhost:5173) di browser.
 npm run build
 npm run preview
 ```
+
+### Quality Gates Cepat (Bun + tsgo + Oxlint + Oxfmt)
+
+```bash
+# type checking cepat (tsgo)
+bun run typecheck
+
+# lint cepat (Oxlint + ESLint untuk transisi aman)
+bun run lint
+
+# format check / format write
+bun run fmt:check
+bun run fmt
+
+# gabungan checks
+bun run check:fast
+bun run check
+```
+
+### Sinkronisasi Data Yahoo Finance
+
+```bash
+# update daftar ticker IDX dulu (universe)
+bun run data:sync:idx-tickers
+
+# fetch quote Yahoo lalu simpan snapshot lokal untuk dipakai UI
+bun run data:sync:yahoo
+
+# one-shot (ticker universe + yahoo snapshot)
+bun run data:sync:all
+```
+
+Detail integrasi dan kontrak datanya ada di `docs/yahoo-finance2-integration.md`.
 
 ---
 
@@ -194,20 +230,22 @@ idx-saham/
 Proyek ini menggunakan design system berbasis **CSS custom properties** (HSL) dengan dukungan dark/light mode:
 
 ### Tokens Utama
-| Token | Fungsi |
-|-------|--------|
-| `--background` | Warna latar belakang utama |
-| `--foreground` | Warna teks utama |
-| `--primary` | Warna aksen utama (tombol, link aktif) |
-| `--secondary` | Warna sekunder (badge, chip) |
-| `--muted` | Warna elemen non-aktif |
-| `--accent` | Warna hover & highlight |
-| `--gain` | Hijau — kenaikan harga |
-| `--loss` | Merah — penurunan harga |
-| `--card` | Warna background kartu |
-| `--border` | Warna border elemen |
+
+| Token          | Fungsi                                 |
+| -------------- | -------------------------------------- |
+| `--background` | Warna latar belakang utama             |
+| `--foreground` | Warna teks utama                       |
+| `--primary`    | Warna aksen utama (tombol, link aktif) |
+| `--secondary`  | Warna sekunder (badge, chip)           |
+| `--muted`      | Warna elemen non-aktif                 |
+| `--accent`     | Warna hover & highlight                |
+| `--gain`       | Hijau — kenaikan harga                 |
+| `--loss`       | Merah — penurunan harga                |
+| `--card`       | Warna background kartu                 |
+| `--border`     | Warna border elemen                    |
 
 ### Penggunaan
+
 ```tsx
 // ✅ Gunakan semantic token
 <div className="bg-card text-foreground border-border" />

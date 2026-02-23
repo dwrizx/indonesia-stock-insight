@@ -1,5 +1,17 @@
 import { useMemo, useState } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ComposedChart, Line } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  ComposedChart,
+  Line,
+} from "recharts";
 import { generateChartData } from "@/data/stockData";
 import { motion } from "framer-motion";
 
@@ -17,10 +29,13 @@ const periods = [
 
 const StockChart = ({ basePrice, ticker }: StockChartProps) => {
   const [activePeriod, setActivePeriod] = useState(1);
-  const data = useMemo(() => generateChartData(basePrice, periods[activePeriod].days), [basePrice, activePeriod]);
+  const data = useMemo(
+    () => generateChartData(basePrice, periods[activePeriod].days),
+    [basePrice, activePeriod],
+  );
 
-  const minPrice = Math.min(...data.map(d => d.price)) * 0.98;
-  const maxPrice = Math.max(...data.map(d => d.price)) * 1.02;
+  const minPrice = Math.min(...data.map((d) => d.price)) * 0.98;
+  const maxPrice = Math.max(...data.map((d) => d.price)) * 1.02;
   const isGain = data[data.length - 1].price >= data[0].price;
   const gainColor = "hsl(152, 69%, 46%)";
   const lossColor = "hsl(0, 72%, 55%)";
@@ -81,11 +96,17 @@ const StockChart = ({ basePrice, ticker }: StockChartProps) => {
           </h3>
           <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <div className="h-0.5 w-4 rounded" style={{ backgroundColor: lineColor }} />
+              <div
+                className="h-0.5 w-4 rounded"
+                style={{ backgroundColor: lineColor }}
+              />
               <span>Harga</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="h-0.5 w-4 rounded bg-primary/60" style={{ borderTop: "1px dashed hsl(45,93%,58%)" }} />
+              <div
+                className="h-0.5 w-4 rounded bg-primary/60"
+                style={{ borderTop: "1px dashed hsl(45,93%,58%)" }}
+              />
               <span>MA(7)</span>
             </div>
           </div>
@@ -99,7 +120,11 @@ const StockChart = ({ basePrice, ticker }: StockChartProps) => {
                 <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 14%, 12%)" vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(222, 14%, 12%)"
+              vertical={false}
+            />
             <XAxis
               dataKey="date"
               tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
@@ -117,9 +142,17 @@ const StockChart = ({ basePrice, ticker }: StockChartProps) => {
             />
             <Tooltip
               contentStyle={tooltipStyle}
-              labelStyle={{ color: "hsl(215, 15%, 50%)", marginBottom: "6px", fontSize: "11px" }}
+              labelStyle={{
+                color: "hsl(215, 15%, 50%)",
+                marginBottom: "6px",
+                fontSize: "11px",
+              }}
               formatter={(value: number, name: string) => {
-                if (name === "ma") return [`Rp${value?.toLocaleString("id-ID") ?? "-"}`, "MA(7)"];
+                if (name === "ma")
+                  return [
+                    `Rp${value?.toLocaleString("id-ID") ?? "-"}`,
+                    "MA(7)",
+                  ];
                 return [`Rp${value.toLocaleString("id-ID")}`, "Harga"];
               }}
               cursor={{ stroke: "hsl(215, 15%, 25%)", strokeDasharray: "4 4" }}
@@ -147,10 +180,16 @@ const StockChart = ({ basePrice, ticker }: StockChartProps) => {
 
       {/* Volume Chart */}
       <div className="card-shine rounded-xl border border-border p-5">
-        <h3 className="mb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Volume Perdagangan</h3>
+        <h3 className="mb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          Volume Perdagangan
+        </h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 14%, 12%)" vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(222, 14%, 12%)"
+              vertical={false}
+            />
             <XAxis
               dataKey="date"
               tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
@@ -167,10 +206,18 @@ const StockChart = ({ basePrice, ticker }: StockChartProps) => {
             />
             <Tooltip
               contentStyle={tooltipStyle}
-              formatter={(value: number) => [`${(value / 1e6).toFixed(1)}M lot`, "Volume"]}
+              formatter={(value: number) => [
+                `${(value / 1e6).toFixed(1)}M lot`,
+                "Volume",
+              ]}
               cursor={{ fill: "hsl(222, 14%, 14%)" }}
             />
-            <Bar dataKey="volume" fill="hsl(45, 93%, 58%)" opacity={0.3} radius={[3, 3, 0, 0]} />
+            <Bar
+              dataKey="volume"
+              fill="hsl(45, 93%, 58%)"
+              opacity={0.3}
+              radius={[3, 3, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

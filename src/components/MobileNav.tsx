@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Menu, X, BarChart3, Home, TrendingUp, Layers, Zap } from "lucide-react";
+import {
+  Menu,
+  X,
+  BarChart3,
+  Home,
+  TrendingUp,
+  Layers,
+  Zap,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "./SearchBar";
@@ -50,7 +58,9 @@ const MobileNav = () => {
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60">
                     <BarChart3 className="h-4 w-4 text-primary-foreground" />
                   </div>
-                  <span className="text-sm font-extrabold gradient-text">IDX Saham</span>
+                  <span className="text-sm font-extrabold gradient-text">
+                    IDX Saham
+                  </span>
                 </div>
                 <button
                   onClick={() => setOpen(false)}

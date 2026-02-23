@@ -34,7 +34,9 @@ const MostActive = () => {
                 i % 2 === 0 ? "bg-secondary/20" : ""
               }`}
             >
-              <span className="font-mono text-[11px] font-extrabold text-primary w-12 text-left">{stock.ticker.replace(".JK", "")}</span>
+              <span className="font-mono text-[11px] font-extrabold text-primary w-12 text-left">
+                {stock.ticker.replace(".JK", "")}
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="h-1.5 rounded-full bg-secondary/50 overflow-hidden">
                   <motion.div
@@ -45,9 +47,14 @@ const MostActive = () => {
                   />
                 </div>
               </div>
-              <span className="font-mono text-[11px] font-bold text-muted-foreground w-14 text-right">{formatVolume(stock.volume)}</span>
-              <span className={`font-mono text-[10px] font-bold w-14 text-right ${isGain ? "text-gain" : "text-loss"}`}>
-                {isGain ? "+" : ""}{stock.changePercent.toFixed(2)}%
+              <span className="font-mono text-[11px] font-bold text-muted-foreground w-14 text-right">
+                {formatVolume(stock.volume)}
+              </span>
+              <span
+                className={`font-mono text-[10px] font-bold w-14 text-right ${isGain ? "text-gain" : "text-loss"}`}
+              >
+                {isGain ? "+" : ""}
+                {stock.changePercent.toFixed(2)}%
               </span>
             </motion.button>
           );

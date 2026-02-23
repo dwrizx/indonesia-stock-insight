@@ -11,7 +11,9 @@ interface PeerComparisonProps {
 
 const PeerComparison = ({ currentTicker, sector }: PeerComparisonProps) => {
   const navigate = useNavigate();
-  const peers = stocks.filter(s => s.sector === sector && s.ticker !== currentTicker).slice(0, 5);
+  const peers = stocks
+    .filter((s) => s.sector === sector && s.ticker !== currentTicker)
+    .slice(0, 5);
 
   if (peers.length === 0) return null;
 
@@ -30,16 +32,28 @@ const PeerComparison = ({ currentTicker, sector }: PeerComparisonProps) => {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border/50">
-              <th className="text-left pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">Saham</th>
-              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">Harga</th>
-              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">P/E</th>
-              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">ROE</th>
-              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">Div</th>
-              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">Chg%</th>
+              <th className="text-left pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                Saham
+              </th>
+              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                Harga
+              </th>
+              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                P/E
+              </th>
+              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                ROE
+              </th>
+              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                Div
+              </th>
+              <th className="text-right pb-2 text-[9px] text-muted-foreground uppercase tracking-wider">
+                Chg%
+              </th>
             </tr>
           </thead>
           <tbody>
-            {peers.map(peer => {
+            {peers.map((peer) => {
               const isGain = peer.change >= 0;
               return (
                 <tr
@@ -49,8 +63,12 @@ const PeerComparison = ({ currentTicker, sector }: PeerComparisonProps) => {
                 >
                   <td className="py-2.5">
                     <div>
-                      <span className="font-mono font-bold text-primary">{peer.ticker.replace(".JK", "")}</span>
-                      <p className="text-[9px] text-muted-foreground mt-0.5 truncate max-w-[100px]">{peer.name}</p>
+                      <span className="font-mono font-bold text-primary">
+                        {peer.ticker.replace(".JK", "")}
+                      </span>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 truncate max-w-[100px]">
+                        {peer.name}
+                      </p>
                     </div>
                   </td>
                   <td className="text-right py-2.5 font-mono font-semibold text-foreground">
@@ -65,8 +83,11 @@ const PeerComparison = ({ currentTicker, sector }: PeerComparisonProps) => {
                   <td className="text-right py-2.5 font-mono text-foreground">
                     {peer.dividendYield.toFixed(1)}%
                   </td>
-                  <td className={`text-right py-2.5 font-mono font-bold ${isGain ? "text-gain" : "text-loss"}`}>
-                    {isGain ? "+" : ""}{peer.changePercent.toFixed(2)}%
+                  <td
+                    className={`text-right py-2.5 font-mono font-bold ${isGain ? "text-gain" : "text-loss"}`}
+                  >
+                    {isGain ? "+" : ""}
+                    {peer.changePercent.toFixed(2)}%
                   </td>
                 </tr>
               );

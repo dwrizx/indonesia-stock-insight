@@ -10,7 +10,11 @@ interface StockTableProps {
 
 function getSignalBadge(stock: Stock): { label: string; color: string } {
   const score =
-    (stock.pe > 0 && stock.pe < 15 ? 2 : stock.pe > 0 && stock.pe < 25 ? 1 : 0) +
+    (stock.pe > 0 && stock.pe < 15
+      ? 2
+      : stock.pe > 0 && stock.pe < 25
+        ? 1
+        : 0) +
     (stock.roe > 15 ? 2 : stock.roe > 10 ? 1 : 0) +
     (stock.dividendYield > 3 ? 1 : 0) +
     (stock.changePercent > 0 ? 1 : 0) +
@@ -34,17 +38,39 @@ const StockTable = ({ stocks }: StockTableProps) => {
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-card">
             <tr className="border-b border-border bg-secondary/30">
-              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ticker</th>
-              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Nama</th>
-              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Sektor</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Harga</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Perubahan</th>
-              <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell w-24">Trend</th>
-              <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Sinyal</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Volume</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">P/E</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Div. Yield</th>
-              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">Market Cap</th>
+              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Ticker
+              </th>
+              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                Nama
+              </th>
+              <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
+                Sektor
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Harga
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Perubahan
+              </th>
+              <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell w-24">
+                Trend
+              </th>
+              <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
+                Sinyal
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                Volume
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
+                P/E
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
+                Div. Yield
+              </th>
+              <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">
+                Market Cap
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -58,46 +84,78 @@ const StockTable = ({ stocks }: StockTableProps) => {
                   className="border-b border-border/30 hover:bg-accent/50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-mono text-xs font-extrabold text-primary">{stock.ticker.replace(".JK", "")}</span>
+                    <span className="font-mono text-xs font-extrabold text-primary">
+                      {stock.ticker.replace(".JK", "")}
+                    </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-xs text-foreground truncate max-w-[160px] block">{stock.name}</span>
+                    <span className="text-xs text-foreground truncate max-w-[160px] block">
+                      {stock.name}
+                    </span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="text-[10px] text-muted-foreground bg-secondary rounded-full px-2 py-0.5">{stock.sector}</span>
+                    <span className="text-[10px] text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
+                      {stock.sector}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="font-mono text-xs font-bold text-foreground">Rp{stock.price.toLocaleString("id-ID")}</span>
+                    <span className="font-mono text-xs font-bold text-foreground">
+                      Rp{stock.price.toLocaleString("id-ID")}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className={`inline-flex items-center gap-1 font-mono text-xs font-bold ${isGain ? "text-gain" : "text-loss"}`}>
-                      {isGain ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {isGain ? "+" : ""}{stock.changePercent.toFixed(2)}%
+                    <div
+                      className={`inline-flex items-center gap-1 font-mono text-xs font-bold ${isGain ? "text-gain" : "text-loss"}`}
+                    >
+                      {isGain ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3" />
+                      )}
+                      {isGain ? "+" : ""}
+                      {stock.changePercent.toFixed(2)}%
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
                     <div className="w-20 h-5 mx-auto opacity-60">
-                      <Sparkline basePrice={stock.price} isGain={isGain} seed={stock.price % 17} height={20} />
+                      <Sparkline
+                        basePrice={stock.price}
+                        isGain={isGain}
+                        seed={stock.price % 17}
+                        height={20}
+                      />
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell text-center">
-                    <span className={`text-[10px] font-extrabold ${signal.color}`}>{signal.label}</span>
+                    <span
+                      className={`text-[10px] font-extrabold ${signal.color}`}
+                    >
+                      {signal.label}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right hidden md:table-cell">
-                    <span className="font-mono text-xs text-muted-foreground">{formatVolume(stock.volume)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {formatVolume(stock.volume)}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right hidden lg:table-cell">
-                    <span className={`font-mono text-xs ${stock.pe > 0 && stock.pe < 15 ? "text-gain font-bold" : "text-foreground"}`}>
+                    <span
+                      className={`font-mono text-xs ${stock.pe > 0 && stock.pe < 15 ? "text-gain font-bold" : "text-foreground"}`}
+                    >
                       {stock.pe > 0 ? stock.pe.toFixed(1) : "N/A"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right hidden lg:table-cell">
-                    <span className={`font-mono text-xs ${stock.dividendYield > 3 ? "text-gain font-bold" : "text-foreground"}`}>
+                    <span
+                      className={`font-mono text-xs ${stock.dividendYield > 3 ? "text-gain font-bold" : "text-foreground"}`}
+                    >
                       {stock.dividendYield.toFixed(1)}%
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right hidden xl:table-cell">
-                    <span className="font-mono text-xs text-muted-foreground">{formatRupiah(stock.marketCap)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {formatRupiah(stock.marketCap)}
+                    </span>
                   </td>
                 </tr>
               );
