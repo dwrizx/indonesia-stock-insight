@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import MarketTicker from "@/components/MarketTicker";
@@ -9,6 +9,8 @@ import StockCard from "@/components/StockCard";
 import StockTable from "@/components/StockTable";
 import HeatMap from "@/components/HeatMap";
 import SectorChart from "@/components/SectorChart";
+import MobileNav from "@/components/MobileNav";
+import { useTheme } from "@/components/ThemeProvider";
 import { stocks, marketIndices, sectorData } from "@/data/stockData";
 
 type SortKey = "changePercent" | "pe" | "dividendYield" | "marketCap" | "price";
@@ -23,6 +25,7 @@ const sortOptions: { key: SortKey; label: string }[] = [
 ];
 
 const Index = () => {
+  const { theme, toggleTheme } = useTheme();
   const [sectorFilter, setSectorFilter] = useState<string>("Semua");
   const [sortKey, setSortKey] = useState<SortKey>("changePercent");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -74,20 +77,32 @@ const Index = () => {
             </div>
             <div>
               <h1 className="text-base font-extrabold tracking-tight gradient-text">IDX Saham</h1>
-              <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Indonesia Stock Analysis</p>
+              <p className="text-[10px] text-muted-foreground tracking-wide uppercase hidden sm:block">Indonesia Stock Analysis</p>
             </div>
           </div>
-          <SearchBar />
-          <div className="hidden lg:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary/50 rounded-lg px-3 py-1.5">
-              <Clock className="h-3 w-3" />
-              <span className="font-mono">{timeStr}</span>
-              <span className="text-muted-foreground/60">WIB</span>
+          <div className="hidden md:block flex-1 max-w-md mx-4">
+            <SearchBar />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary/50 rounded-lg px-3 py-1.5">
+                <Clock className="h-3 w-3" />
+                <span className="font-mono">{timeStr}</span>
+                <span className="text-muted-foreground/60">WIB</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-lg bg-gain/10 border border-gain/20 px-3 py-1.5">
+                <span className="h-2 w-2 rounded-full bg-gain animate-pulse-glow" />
+                <span className="text-gain font-semibold text-[11px]">Pasar Buka</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-gain/10 border border-gain/20 px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-gain animate-pulse-glow" />
-              <span className="text-gain font-semibold text-[11px]">Pasar Buka</span>
-            </div>
+            <button
+              onClick={toggleTheme}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/50 text-foreground transition-colors hover:bg-accent"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <MobileNav />
           </div>
         </div>
       </header>
@@ -104,11 +119,11 @@ const Index = () => {
               <div className="flex flex-wrap items-start justify-between gap-6">
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{dateStr}</p>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
+                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
                     Ringkasan<br />
                     <span className="gradient-text">Pasar Indonesia</span>
                   </h2>
-                  <p className="text-sm text-muted-foreground max-w-md">
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
                     Pantau pergerakan saham IDX secara real-time. Analisis fundamental dan teknikal untuk keputusan investasi yang lebih cerdas.
                   </p>
                   <div className="flex items-center gap-3 pt-2">
@@ -134,7 +149,7 @@ const Index = () => {
                     <Globe className="h-4 w-4 text-primary" />
                     <span className="text-xs font-bold text-primary uppercase tracking-wider">IHSG</span>
                   </div>
-                  <p className="font-mono text-3xl font-extrabold text-foreground">{ihsg.value.toLocaleString("id-ID")}</p>
+                  <p className="font-mono text-2xl sm:text-3xl font-extrabold text-foreground">{ihsg.value.toLocaleString("id-ID")}</p>
                   <div className={`mt-2 flex items-center gap-2 ${ihsg.change >= 0 ? "text-gain" : "text-loss"}`}>
                     {ihsg.change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                     <span className="font-mono text-sm font-bold">{ihsg.change >= 0 ? "+" : ""}{ihsg.change.toFixed(2)}</span>
