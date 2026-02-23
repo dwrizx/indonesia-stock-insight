@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target } from "lucide-react";
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart } from "lucide-react";
 import { motion } from "framer-motion";
 import { stocks, formatRupiah, formatVolume } from "@/data/stockData";
 import StockChart from "@/components/StockChart";
+import TechnicalAnalysis from "@/components/TechnicalAnalysis";
 
 const StockDetail = () => {
+  const [activeTab, setActiveTab] = useState<"chart" | "teknikal">("chart");
   const { ticker } = useParams();
   const navigate = useNavigate();
   const stock = stocks.find((s) => s.ticker === ticker);
@@ -132,14 +135,44 @@ const StockDetail = () => {
         </motion.div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Charts */}
+          {/* Charts with Tabs */}
           <motion.div
             className="lg:col-span-2 space-y-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <StockChart basePrice={stock.price} ticker={stock.ticker} />
+            {/* Tab Selector */}
+            <div className="flex items-center gap-1 rounded-lg bg-secondary/50 p-1 w-fit">
+              <button
+                onClick={() => setActiveTab("chart")}
+                className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-bold transition-all ${
+                  activeTab === "chart"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BarChart2 className="h-3.5 w-3.5" />
+                Grafik Harga
+              </button>
+              <button
+                onClick={() => setActiveTab("teknikal")}
+                className={`flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-bold transition-all ${
+                  activeTab === "teknikal"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LineChart className="h-3.5 w-3.5" />
+                Analisis Teknikal
+              </button>
+            </div>
+
+            {activeTab === "chart" ? (
+              <StockChart basePrice={stock.price} ticker={stock.ticker} />
+            ) : (
+              <TechnicalAnalysis basePrice={stock.price} ticker={stock.ticker} />
+            )}
           </motion.div>
 
           {/* Sidebar */}
