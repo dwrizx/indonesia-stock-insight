@@ -41,6 +41,7 @@ import MarketSentiment from "@/components/MarketSentiment";
 import MarketSummary from "@/components/MarketSummary";
 import MostActive from "@/components/MostActive";
 import SectorDetail from "@/components/SectorDetail";
+import SmartSignals from "@/components/SmartSignals";
 import { useTheme } from "@/components/ThemeProvider";
 import StockScreener from "@/components/StockScreener";
 import {
@@ -394,6 +395,24 @@ const Index = () => {
                   </motion.div>
                 ))}
               </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {[
+                  { key: "stocks", label: "Lihat Saham", icon: Zap },
+                  { key: "screening", label: "Buka Screening", icon: Filter },
+                  { key: "heatmap", label: "Peta Pasar", icon: Layers },
+                  { key: "sectors", label: "Analisis Sektor", icon: PieChart },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => switchTab(item.key as typeof activeTab)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-primary/35"
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-primary" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -518,6 +537,8 @@ const Index = () => {
                     <MarketSentiment stocks={stocks} />
                     <MostActive stocks={stocks} />
                   </div>
+
+                  <SmartSignals stocks={stocks} />
 
                   <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
