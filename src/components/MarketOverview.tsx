@@ -14,7 +14,9 @@ const MarketOverview = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
-            className="group relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all duration-300 overflow-hidden gradient-border"
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            className="group relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all duration-300 overflow-hidden gradient-border hover:shadow-lg hover:shadow-primary/10"
+            style={{ perspective: "800px" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <div className="relative z-10">
@@ -26,9 +28,22 @@ const MarketOverview = () => {
                 </div>
               </div>
               <p className="font-mono text-xl font-extrabold text-foreground mb-2">{idx.value.toLocaleString("id-ID")}</p>
-              <div className="h-8 opacity-50 group-hover:opacity-80 transition-opacity">
-                <Sparkline basePrice={idx.value} isGain={isGain} seed={i * 7} height={32} />
+              
+              {/* Enhanced sparkline */}
+              <div className="h-10 opacity-60 group-hover:opacity-100 transition-opacity">
+                <Sparkline basePrice={idx.value} isGain={isGain} seed={i * 7} height={40} />
               </div>
+
+              {/* Mini progress bar */}
+              <div className="mt-2 h-1 rounded-full bg-secondary/50 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(50 + Math.abs(idx.changePercent) * 20, 95)}%` }}
+                  transition={{ duration: 1, delay: i * 0.1 + 0.5 }}
+                  className={`h-full rounded-full ${isGain ? "bg-gain/60" : "bg-loss/60"}`}
+                />
+              </div>
+
               <p className={`mt-2 font-mono text-xs font-semibold ${isGain ? "text-gain" : "text-loss"}`}>
                 {isGain ? "+" : ""}{idx.change.toFixed(2)} pts
               </p>

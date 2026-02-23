@@ -18,14 +18,31 @@ const StockCard = ({ stock, index }: StockCardProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
+      whileHover={{ y: -6, transition: { duration: 0.2 } }}
       onClick={() => navigate(`/stock/${stock.ticker}`)}
-      className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/30 hover:glow-primary relative overflow-hidden"
+      className="group cursor-pointer rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10 relative overflow-hidden"
     >
+      {/* Color-coded left border */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${isGain ? "bg-gradient-to-b from-gain to-gain/30" : "bg-gradient-to-b from-loss to-loss/30"}`} />
+      
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+      {/* Rank badge */}
+      <div className="absolute top-3 right-3 z-10">
+        <span className={`flex items-center justify-center h-6 w-6 rounded-full text-[9px] font-extrabold ${
+          index < 3 
+            ? index === 0 ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" 
+            : index === 1 ? "bg-gray-400/20 text-gray-300 border border-gray-400/30"
+            : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+            : "bg-secondary text-muted-foreground"
+        }`}>
+          #{index + 1}
+        </span>
+      </div>
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-3 pr-8">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-mono text-sm font-extrabold text-primary">{stock.ticker.replace(".JK", "")}</h3>
@@ -68,6 +85,14 @@ const StockCard = ({ stock, index }: StockCardProps) => {
             <p className="text-[9px] text-muted-foreground uppercase tracking-wider">MCap</p>
             <p className="font-mono text-xs font-bold text-foreground">{formatRupiah(stock.marketCap)}</p>
           </div>
+        </div>
+
+        {/* Volume comparison mini bar */}
+        <div className="mt-3 h-1 rounded-full bg-secondary/40 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary/40 transition-all"
+            style={{ width: `${Math.min((stock.volume / 2340000000) * 100, 100)}%` }}
+          />
         </div>
 
         {/* Hover CTA */}

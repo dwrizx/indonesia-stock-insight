@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge, Sun, Moon } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, ExternalLink, Activity, DollarSign, PieChart, BarChart2, Shield, Target, LineChart, Gauge, Sun, Moon, ChevronRight } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
 import { stocks, formatRupiah, formatVolume } from "@/data/stockData";
@@ -8,6 +8,7 @@ import StockChart from "@/components/StockChart";
 import TechnicalAnalysis from "@/components/TechnicalAnalysis";
 import PeerComparison from "@/components/PeerComparison";
 import StockNewsList from "@/components/StockNewsList";
+import AnimatedCounter from "@/components/AnimatedCounter";
 
 const StockDetail = () => {
   const { theme, toggleTheme } = useTheme();
@@ -84,6 +85,13 @@ const StockDetail = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6">
+          <Link to="/" className="hover:text-primary transition-colors">Dashboard</Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-foreground font-semibold">{stock.ticker.replace(".JK", "")}</span>
+        </nav>
+
         {/* Stock Hero */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -104,7 +112,9 @@ const StockDetail = () => {
                   <p className="text-sm text-muted-foreground">{stock.name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground">Rp{stock.price.toLocaleString("id-ID")}</p>
+                  <p className="font-mono text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
+                    Rp<AnimatedCounter value={stock.price} format={(v) => Math.round(v).toLocaleString("id-ID")} />
+                  </p>
                   <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold ${isGain ? "bg-gain/10 border border-gain/20 text-gain" : "bg-loss/10 border border-loss/20 text-loss"}`}>
                     {isGain ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                     <span>{isGain ? "+" : ""}{stock.change.toLocaleString("id-ID")}</span>
@@ -206,12 +216,15 @@ const StockDetail = () => {
                 Info Perdagangan
               </h3>
               <div className="grid grid-cols-2 gap-2">
-                {tradingInfo.map((m) => (
-                  <div key={m.label} className="rounded-lg bg-secondary/40 p-3">
-                    <p className="text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">{m.label}</p>
-                    <p className="font-mono text-xs font-bold text-foreground">{m.value}</p>
-                  </div>
-                ))}
+                {tradingInfo.map((m) => {
+                  const isPositive = m.label === "High" || (m.label === "Volume");
+                  return (
+                    <div key={m.label} className={`rounded-lg p-3 ${isPositive ? "bg-gain/5 border border-gain/10" : "bg-secondary/40"}`}>
+                      <p className="text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">{m.label}</p>
+                      <p className="font-mono text-xs font-bold text-foreground">{m.value}</p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
