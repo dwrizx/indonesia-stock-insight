@@ -101,6 +101,17 @@ export const stocks: Stock[] = [
   },
 ];
 
+export function generateSparkline(basePrice: number, points: number = 20, seed: number = 0): number[] {
+  const data: number[] = [];
+  let price = basePrice * 0.95;
+  for (let i = 0; i < points; i++) {
+    const volatility = (Math.sin(seed + i * 0.7) * 0.3 + (Math.random() - 0.48)) * basePrice * 0.02;
+    price = Math.max(price + volatility, basePrice * 0.8);
+    data.push(Math.round(price));
+  }
+  return data;
+}
+
 export function generateChartData(basePrice: number, days: number = 90): ChartDataPoint[] {
   const data: ChartDataPoint[] = [];
   let price = basePrice * 0.9;
@@ -119,6 +130,15 @@ export function generateChartData(basePrice: number, days: number = 90): ChartDa
   }
   return data;
 }
+
+export const sectorData = [
+  { name: "Keuangan", value: 42, color: "hsl(45, 93%, 58%)" },
+  { name: "Konsumsi", value: 18, color: "hsl(152, 69%, 46%)" },
+  { name: "Telekomunikasi", value: 14, color: "hsl(200, 70%, 50%)" },
+  { name: "Industri", value: 12, color: "hsl(280, 60%, 55%)" },
+  { name: "Teknologi", value: 8, color: "hsl(340, 65%, 55%)" },
+  { name: "Ritel", value: 6, color: "hsl(25, 80%, 55%)" },
+];
 
 export function formatRupiah(value: number): string {
   if (value >= 1e15) return `Rp${(value / 1e12).toFixed(0)}T`;
