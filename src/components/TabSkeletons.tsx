@@ -119,3 +119,41 @@ export const SectorSkeleton = () => (
     </div>
   </motion.div>
 );
+
+export const CompareSkeleton = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="space-y-6"
+  >
+    <div>
+      <SkeletonPulse className="h-3 w-32 mb-3" />
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonPulse key={i} className="h-9 w-28 rounded-lg" />
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-3">
+      <SkeletonPulse className="h-10 rounded-lg" />
+      <SkeletonPulse className="h-9 w-9 rounded-full" />
+      <SkeletonPulse className="h-10 rounded-lg" />
+    </div>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="grid grid-cols-3 gap-4">
+        <SkeletonPulse className="h-12 rounded-lg" />
+        <SkeletonPulse className="h-4 w-full self-center rounded-full" />
+        <SkeletonPulse className="h-12 rounded-lg" />
+      </div>
+    </div>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="grid grid-cols-[1fr,auto,1fr] items-center px-4 py-3 border-b border-border/30">
+          <SkeletonPulse className="h-3 w-20 ml-auto" />
+          <SkeletonPulse className="h-3 w-16 mx-3" />
+          <SkeletonPulse className="h-3 w-20" />
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);
