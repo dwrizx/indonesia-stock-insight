@@ -58,6 +58,7 @@ import {
   formatRupiah,
   formatVolume,
 } from "@/data/stockData";
+import { getMarketIndexUrl } from "@/lib/marketIndex";
 
 type SortKey = "changePercent" | "pe" | "dividendYield" | "marketCap" | "price";
 type SortDir = "asc" | "desc";
@@ -156,6 +157,10 @@ const Index = () => {
       setSortKey(key);
       setSortDir("desc");
     }
+  };
+
+  const openIndex = (name: string) => {
+    window.open(getMarketIndexUrl(name), "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -267,12 +272,24 @@ const Index = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
-                  className="rounded-2xl card-glass border border-primary/20 p-5 min-w-[180px] gradient-border"
+                  onClick={() => openIndex(ihsg.name)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openIndex(ihsg.name);
+                    }
+                  }}
+                  className="rounded-2xl card-glass border border-primary/20 p-5 min-w-[180px] gradient-border cursor-pointer hover:border-primary/40 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     <Globe className="h-3.5 w-3.5 text-primary" />
                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
                       IHSG
+                    </span>
+                    <span className="text-[9px] text-muted-foreground">
+                      Klik chart
                     </span>
                   </div>
                   <p className="font-mono text-2xl sm:text-3xl font-extrabold text-foreground">

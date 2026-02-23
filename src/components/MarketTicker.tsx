@@ -1,14 +1,24 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { marketIndices } from "@/data/stockData";
+import { getMarketIndexUrl } from "@/lib/marketIndex";
 
 const MarketTicker = () => {
   const items = [...marketIndices, ...marketIndices, ...marketIndices];
 
+  const openIndex = (name: string) => {
+    window.open(getMarketIndexUrl(name), "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <div className="overflow-hidden border-b border-border bg-card/40 backdrop-blur-sm">
-      <div className="flex animate-ticker whitespace-nowrap py-2.5">
+    <div className="group overflow-hidden border-b border-border bg-card/40 backdrop-blur-sm">
+      <div className="flex animate-ticker whitespace-nowrap py-2.5 group-hover:[animation-play-state:paused]">
         {items.map((index, i) => (
-          <div key={i} className="mx-8 flex items-center gap-3 text-sm">
+          <button
+            key={`${index.name}-${i}`}
+            onClick={() => openIndex(index.name)}
+            className="mx-8 flex items-center gap-3 text-sm transition-opacity hover:opacity-80"
+            title={`Buka chart ${index.name}`}
+          >
             <span className="font-bold text-foreground">{index.name}</span>
             <span className="font-mono text-foreground/80">
               {index.value.toLocaleString("id-ID")}
@@ -24,7 +34,7 @@ const MarketTicker = () => {
               {index.change >= 0 ? "+" : ""}
               {index.changePercent.toFixed(2)}%
             </span>
-          </div>
+          </button>
         ))}
       </div>
     </div>

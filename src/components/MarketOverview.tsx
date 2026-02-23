@@ -2,8 +2,13 @@ import { marketIndices } from "@/data/stockData";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
 import Sparkline from "@/components/Sparkline";
+import { getMarketIndexUrl } from "@/lib/marketIndex";
 
 const MarketOverview = () => {
+  const openIndex = (name: string) => {
+    window.open(getMarketIndexUrl(name), "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {marketIndices.map((idx, i) => {
@@ -15,8 +20,17 @@ const MarketOverview = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            onClick={() => openIndex(idx.name)}
             className="group relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all duration-300 overflow-hidden gradient-border hover:shadow-lg hover:shadow-primary/10"
             style={{ perspective: "800px" }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openIndex(idx.name);
+              }
+            }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             <div className="relative z-10">
