@@ -1,88 +1,127 @@
 
-# Peningkatan Visual & UX - IDX Saham Platform
+# Peningkatan Besar IDX Saham - Fitur Baru & Perbaikan Tampilan
 
 ## Ringkasan
-Menyempurnakan tampilan keseluruhan platform agar lebih profesional, modern, dan polished. Fokus pada micro-interactions, visual hierarchy, typography refinement, dan komponen baru yang membuat dashboard terasa premium seperti Bloomberg Terminal atau TradingView.
 
-## Package Baru yang Diperlukan
+Berdasarkan analisis mendalam terhadap semua tab dan komponen yang ada, berikut adalah ide fitur baru dan perbaikan visual yang akan membuat platform jauh lebih profesional dan fungsional.
 
-| Package | Fungsi |
-|---------|--------|
-| `@radix-ui/react-separator` | Sudah terinstall - visual divider |
-| `lucide-react` | Sudah terinstall - ikon tambahan |
-| `framer-motion` | Sudah terinstall - animasi lanjutan |
+---
 
-Tidak ada package baru yang perlu ditambahkan - semua yang diperlukan sudah tersedia.
+## A. Fitur Baru
 
-## Perubahan yang Akan Dilakukan
+### 1. Watchlist / Saham Favorit (Tab Baru atau Widget)
+- Pengguna bisa menandai saham sebagai favorit dengan klik ikon bintang
+- Data disimpan di localStorage
+- Widget ringkasan watchlist ditampilkan di tab Ringkasan
+- Notifikasi visual jika saham di watchlist bergerak signifikan (lebih dari 2%)
 
-### 1. Hero Section - Redesign Premium
-- Tambahkan animasi angka "counting up" pada IHSG value menggunakan framer-motion
-- Tambahkan mini stat cards (Volume Total, Market Cap Total, Jumlah Saham Aktif) di bawah badge Naik/Turun
-- Gradient background yang lebih halus dengan animasi subtle shimmer
+### 2. Stock Screener (Tab Baru)
+- Filter saham berdasarkan kriteria fundamental: P/E range, ROE minimum, Dividend Yield minimum, Market Cap range, Beta range
+- Preset filter cepat: "Value Stocks", "Growth Stocks", "High Dividend", "Low Risk"
+- Hasil ditampilkan dalam tabel yang bisa di-sort
+- Jumlah saham yang memenuhi kriteria ditampilkan secara real-time
 
-### 2. Market Overview Cards - Polish
-- Tambahkan hover effect 3D tilt ringan (CSS transform perspective)
-- Perbesar sparkline area agar lebih menonjol
-- Tambahkan mini progress bar yang menunjukkan posisi harga relatif terhadap range hari ini
-- Border glow animation saat hover
+### 3. Market Sentiment Indicator (di Tab Ringkasan)
+- Gauge/meter besar yang menunjukkan sentimen pasar: "Fear" vs "Greed"
+- Dihitung dari rasio saham naik/turun, volume, dan volatilitas
+- Visual seperti speedometer dengan warna gradasi merah-kuning-hijau
 
-### 3. Tab Navigation - Upgrade
-- Tambahkan animated underline/indicator yang bergerak smooth antar tab (sliding pill effect)
-- Badge notification count pada tab "Saham" menunjukkan jumlah saham
-- Icon animation saat tab aktif (subtle bounce)
+### 4. Mini Portfolio Simulator (di Tab Ringkasan atau Baru)
+- Input: pilih saham, jumlah lot, harga beli
+- Output: estimasi profit/loss saat ini, persentase return
+- Simpan di localStorage
+- Total portfolio value dan return ditampilkan
 
-### 4. Stock Cards - Visual Enhancement
-- Tambahkan color-coded left border berdasarkan performa (hijau/merah gradient)
-- Tambahkan rank badge (#1, #2, dst) pada grid view
-- Hover state: card sedikit terangkat (translateY) dengan shadow yang lebih dramatis
-- Tambahkan mini bar chart untuk volume comparison di bawah metrics
+---
 
-### 5. Top Movers - Improved Layout
-- Tambahkan alternating row background untuk readability
-- Rank numbers dengan styled badge (1st = gold, 2nd = silver, 3rd = bronze)
-- Animated entry: staggered list animation saat tab dibuka
-- Persentase change dengan filled background pill yang lebih prominent
+## B. Perbaikan Per Tab
 
-### 6. Sector Chart - Better Visualization
-- Tambahkan interactive hover tooltip yang lebih detail
-- Color coding yang lebih kontras antar sektor
+### Tab Ringkasan (Overview)
+**Saat ini**: MarketOverview cards + TopMovers + SectorChart
+**Perbaikan**:
+- Tambahkan Market Sentiment gauge di bagian atas
+- Tambahkan section "Market Summary" berupa 1-2 kalimat auto-generated tentang kondisi pasar hari ini (contoh: "Pasar menguat hari ini dengan 9 dari 14 saham ditutup hijau. Sektor Teknologi memimpin kenaikan.")
+- Tambahkan "Saham Paling Aktif" (berdasarkan volume) sebagai section ketiga di samping Top Gainers/Losers
+- MarketOverview cards: tambahkan sparkline yang lebih besar dan klik untuk navigasi ke detail indeks
+- TopMovers: tampilkan harga di samping persentase, dan tambahkan kolom volume
 
-### 7. Global UI Polish (index.css)
-- Tambahkan CSS custom property untuk smooth transition antar tema
-- Tambahkan subtle backdrop blur pada semua card components
-- Improve scrollbar styling
-- Tambahkan focus-visible styles yang lebih jelas untuk accessibility
-- Glass morphism effect yang lebih refined
+### Tab Saham (Stocks)
+**Saat ini**: Grid/Table view dengan filter sektor dan sort
+**Perbaikan**:
+- Tambahkan search bar khusus di atas filter (saat ini search hanya di header)
+- StockCard: tambahkan badge sinyal (BUY/HOLD/SELL) kecil di pojok berdasarkan fundamental score
+- StockTable: tambahkan sticky header agar header tabel tetap terlihat saat scroll
+- Tambahkan pagination atau "Load More" jika jumlah saham bertambah
+- Tambahkan quick-filter chips: "Blue Chip", "High Dividend", "Small Cap", "Teknologi"
 
-### 8. StockDetail Page - Premium Feel
-- Tambahkan breadcrumb navigation (Dashboard > BBCA)
-- Price display dengan animated counter
-- Metric cards dengan subtle gradient backgrounds berdasarkan nilai (hijau jika positif)
-- Improved tab switching dengan sliding animation
+### Tab Peta Pasar (Heatmap)
+**Saat ini**: Grid sederhana dengan warna berdasarkan perubahan harga
+**Perbaikan**:
+- Tambahkan tooltip detail saat hover: nama saham, harga, volume, market cap
+- Tambahkan toggle view: berdasarkan "Perubahan Harga" vs "Volume" vs "Market Cap"
+- Tambahkan legenda warna (color scale bar) di atas heatmap
+- Grouping berdasarkan sektor dengan label sektor yang jelas
+- Ukuran kotak lebih proporsional terhadap market cap (treemap style yang lebih baik)
+- Klik pada kotak navigasi ke halaman detail saham
 
-### 9. Footer Section (Baru)
-- Tambahkan footer dengan disclaimer, links, dan branding
-- Informasi "Data terakhir diperbarui" timestamp
-- Social/info links
+### Tab Bandingkan (Compare)
+**Saat ini**: Sudah cukup lengkap dengan chart, fundamental, teknikal, dan analyst ratings
+**Perbaikan**:
+- Tambahkan fitur "Compare 3 Saham" (saat ini hanya 2)
+- Tambahkan radar chart untuk visualisasi perbandingan multi-dimensi (Valuasi, Profitabilitas, Dividen, Momentum, Risiko)
+- Tambahkan section "Verdict / Kesimpulan" berupa ringkasan auto-generated siapa yang lebih baik dan mengapa
+- Tambahkan share/export button untuk screenshot perbandingan
+- Scroll-to-section navigation di samping kiri
 
-## Detail Teknis
+### Tab Sektor
+**Saat ini**: Hanya pie chart dengan daftar sektor
+**Perbaikan**:
+- Tambahkan detail per sektor saat diklik: daftar saham dalam sektor itu, rata-rata P/E sektor, rata-rata perubahan harga
+- Tambahkan bar chart horizontal untuk perbandingan performa sektor (hari ini)
+- Tambahkan tabel ringkasan sektor: nama, jumlah saham, avg change%, avg P/E, avg dividend yield
+- Klik pada sektor membuka expanded view dengan saham-saham di dalamnya
 
-### File yang akan dimodifikasi:
-1. `src/index.css` - Tambah utility classes baru, improve transitions, glass effects
-2. `src/pages/Index.tsx` - Hero redesign, tab animation, footer, stat cards
-3. `src/components/MarketOverview.tsx` - 3D hover, progress bar, enhanced sparklines
-4. `src/components/StockCard.tsx` - Color border, rank badge, better hover states
-5. `src/components/TopMovers.tsx` - Ranked list, alternating rows, staggered animation
-6. `src/components/SectorChart.tsx` - Better tooltips, colors
-7. `src/pages/StockDetail.tsx` - Breadcrumb, animated price, gradient metric cards
+---
 
-### File baru:
-1. `src/components/AnimatedCounter.tsx` - Reusable angka yang beranimasi naik/turun
-2. `src/components/Footer.tsx` - Footer component
+## C. Perbaikan Tampilan Global
+
+### Header & Navigation
+- Tambahkan notifikasi badge pada tab jika ada saham yang bergerak lebih dari 3%
+- Mobile search: tampilkan search bar di halaman utama untuk mobile (saat ini hanya di desktop header)
+
+### Heatmap - Redesign Total
+- Gunakan layout treemap yang lebih akurat dengan ukuran kotak proporsional ke market cap
+- Tambahkan animasi transisi saat data berubah
+- Color legend bar di bagian atas
+
+### Stock Detail Page
+- Tambahkan tab "Berita" dan "Peer Comparison" ke dalam tab selector (saat ini terpisah di bawah)
+- Tambahkan ringkasan 1 kalimat di bawah nama saham tentang kondisi saham
+
+---
+
+## D. Detail Teknis
+
+### File Baru:
+1. `src/components/MarketSentiment.tsx` - Gauge sentimen pasar (Fear/Greed meter)
+2. `src/components/MarketSummary.tsx` - Ringkasan pasar auto-generated
+3. `src/components/MostActive.tsx` - Saham paling aktif berdasarkan volume
+4. `src/components/HeatMapLegend.tsx` - Color scale legend untuk heatmap
+5. `src/components/SectorDetail.tsx` - Detail expanded per sektor
+6. `src/components/RadarCompare.tsx` - Radar chart untuk perbandingan multi-dimensi
+
+### File yang Dimodifikasi:
+1. `src/pages/Index.tsx` - Integrasi komponen baru di setiap tab, mobile search
+2. `src/components/HeatMap.tsx` - Redesign dengan tooltip, toggle view, legenda, grouping sektor, navigasi klik
+3. `src/components/SectorChart.tsx` - Tambahkan bar chart performa, tabel ringkasan, klik-to-expand
+4. `src/components/StockCompare.tsx` - Radar chart, verdict section
+5. `src/components/StockCard.tsx` - Badge sinyal BUY/HOLD/SELL
+6. `src/components/StockTable.tsx` - Sticky header, tambah kolom
+7. `src/components/TopMovers.tsx` - Tambahkan kolom harga dan volume, section "Most Active"
+8. `src/components/MarketOverview.tsx` - Klik navigasi, sparkline lebih besar
 
 ### Pendekatan:
-- Menggunakan framer-motion yang sudah terinstall untuk semua animasi
-- CSS custom properties untuk transisi tema yang smooth
-- Tailwind utilities untuk konsistensi styling
-- Tidak menambahkan dependency baru untuk menjaga bundle size tetap kecil
+- Semua menggunakan library yang sudah terinstall (framer-motion, recharts, lucide-react)
+- Tidak perlu package baru
+- Data menggunakan stockData.ts yang sudah ada dengan kalkulasi tambahan
+- localStorage untuk fitur Watchlist dan Portfolio
