@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Clock, Activity, Zap, Globe, Filter, ArrowUpDown, X, LayoutGrid, List, Layers, Sun, Moon, PieChart, Table2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "@/components/SearchBar";
 import MarketTicker from "@/components/MarketTicker";
@@ -31,7 +31,7 @@ const Index = () => {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-
+  const [activeTab, setActiveTab] = useState<"overview" | "stocks" | "heatmap" | "sectors">("overview");
   const sectors = useMemo(() => ["Semua", ...sectorData.map(s => s.name)], []);
 
   const filteredStocks = useMemo(() => {
@@ -109,33 +109,30 @@ const Index = () => {
 
       <MarketTicker />
 
-      <main className="container mx-auto px-4 py-8 space-y-10">
+      <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Hero Section */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="relative rounded-2xl overflow-hidden border border-border">
             <div className="absolute inset-0 grid-pattern opacity-30" />
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-gain/5" />
-            <div className="relative p-6 md:p-8">
-              <div className="flex flex-wrap items-start justify-between gap-6">
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{dateStr}</p>
-                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
+            <div className="relative p-5 md:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4 md:gap-6">
+                <div className="space-y-2 md:space-y-3">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-widest">{dateStr}</p>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
                     Ringkasan<br />
                     <span className="gradient-text">Pasar Indonesia</span>
                   </h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md">
-                    Pantau pergerakan saham IDX secara real-time. Analisis fundamental dan teknikal untuk keputusan investasi yang lebih cerdas.
-                  </p>
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="flex items-center gap-2 rounded-lg bg-gain/10 border border-gain/20 px-3 py-2">
-                      <TrendingUp className="h-3.5 w-3.5 text-gain" />
-                      <span className="text-sm font-bold text-gain">{gainCount}</span>
-                      <span className="text-xs text-gain/70">Naik</span>
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-gain/10 border border-gain/20 px-2.5 py-1.5">
+                      <TrendingUp className="h-3 w-3 text-gain" />
+                      <span className="text-xs font-bold text-gain">{gainCount}</span>
+                      <span className="text-[10px] text-gain/70">Naik</span>
                     </div>
-                    <div className="flex items-center gap-2 rounded-lg bg-loss/10 border border-loss/20 px-3 py-2">
-                      <TrendingDown className="h-3.5 w-3.5 text-loss" />
-                      <span className="text-sm font-bold text-loss">{lossCount}</span>
-                      <span className="text-xs text-loss/70">Turun</span>
+                    <div className="flex items-center gap-1.5 rounded-lg bg-loss/10 border border-loss/20 px-2.5 py-1.5">
+                      <TrendingDown className="h-3 w-3 text-loss" />
+                      <span className="text-xs font-bold text-loss">{lossCount}</span>
+                      <span className="text-[10px] text-loss/70">Turun</span>
                     </div>
                   </div>
                 </div>
@@ -143,17 +140,17 @@ const Index = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
-                  className="rounded-2xl card-glass border border-primary/20 p-6 min-w-[200px] gradient-border"
+                  className="rounded-2xl card-glass border border-primary/20 p-5 min-w-[180px] gradient-border"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Globe className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-bold text-primary uppercase tracking-wider">IHSG</span>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Globe className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">IHSG</span>
                   </div>
                   <p className="font-mono text-2xl sm:text-3xl font-extrabold text-foreground">{ihsg.value.toLocaleString("id-ID")}</p>
-                  <div className={`mt-2 flex items-center gap-2 ${ihsg.change >= 0 ? "text-gain" : "text-loss"}`}>
-                    {ihsg.change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                    <span className="font-mono text-sm font-bold">{ihsg.change >= 0 ? "+" : ""}{ihsg.change.toFixed(2)}</span>
-                    <span className="font-mono text-xs opacity-70">({ihsg.change >= 0 ? "+" : ""}{ihsg.changePercent.toFixed(2)}%)</span>
+                  <div className={`mt-1.5 flex items-center gap-1.5 ${ihsg.change >= 0 ? "text-gain" : "text-loss"}`}>
+                    {ihsg.change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                    <span className="font-mono text-xs font-bold">{ihsg.change >= 0 ? "+" : ""}{ihsg.change.toFixed(2)}</span>
+                    <span className="font-mono text-[10px] opacity-70">({ihsg.change >= 0 ? "+" : ""}{ihsg.changePercent.toFixed(2)}%)</span>
                   </div>
                 </motion.div>
               </div>
@@ -161,176 +158,208 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Market Overview */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Indeks Pasar</h3>
-          </div>
-          <MarketOverview />
-        </section>
-
-        {/* Heatmap */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Peta Pasar</h3>
-          </div>
-          <HeatMap />
-        </section>
-
-        {/* Top Movers + Sector */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <TopMovers />
-          </div>
-          <div>
-            <SectorChart />
-          </div>
+        {/* Tab Navigation Bar */}
+        <div className="flex items-center gap-1 rounded-xl bg-card border border-border p-1.5 overflow-x-auto scrollbar-hide">
+          {([
+            { key: "overview" as const, label: "Ringkasan", icon: Activity },
+            { key: "stocks" as const, label: "Saham", icon: Zap },
+            { key: "heatmap" as const, label: "Peta Pasar", icon: Layers },
+            { key: "sectors" as const, label: "Sektor", icon: PieChart },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === tab.key
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* All Stocks with Filter & Sort */}
-        <section>
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-                <Zap className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Saham Populer</h2>
-                <p className="text-xs text-muted-foreground">{filteredStocks.length} dari {stocks.length} saham</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* View Toggle */}
-              <div className="flex items-center rounded-lg bg-secondary/50 p-0.5 border border-border">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`rounded-md p-2 transition-all ${viewMode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`rounded-md p-2 transition-all ${viewMode === "table" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <List className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <button
-                onClick={() => setShowFilters(f => !f)}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all border ${
-                  showFilters || sectorFilter !== "Semua"
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Filter className="h-3.5 w-3.5" />
-                Filter & Sort
-                {sectorFilter !== "Semua" && (
-                  <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] text-primary-foreground">1</span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Filter Panel */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden mb-6"
-              >
-                <div className="rounded-xl border border-border bg-card p-5 space-y-5">
-                  {/* Sector Filter */}
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Sektor</p>
-                    <div className="flex flex-wrap gap-2">
-                      {sectors.map(s => (
-                        <button
-                          key={s}
-                          onClick={() => setSectorFilter(s)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border ${
-                            sectorFilter === s
-                              ? "bg-primary/15 border-primary/40 text-primary"
-                              : "bg-secondary/30 border-border text-muted-foreground hover:text-foreground hover:border-border"
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                      {sectorFilter !== "Semua" && (
-                        <button
-                          onClick={() => setSectorFilter("Semua")}
-                          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-loss hover:bg-loss/10 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                          Reset
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Sort */}
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Urutkan</p>
-                    <div className="flex flex-wrap gap-2">
-                      {sortOptions.map(opt => (
-                        <button
-                          key={opt.key}
-                          onClick={() => toggleSort(opt.key)}
-                          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border ${
-                            sortKey === opt.key
-                              ? "bg-primary/15 border-primary/40 text-primary"
-                              : "bg-secondary/30 border-border text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {opt.label}
-                          {sortKey === opt.key && (
-                            <ArrowUpDown className={`h-3 w-3 transition-transform ${sortDir === "asc" ? "rotate-180" : ""}`} />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {activeTab === "overview" && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-6"
+            >
+              <MarketOverview />
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                  <TopMovers />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <div>
+                  <SectorChart />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-          {viewMode === "table" ? (
-            <StockTable stocks={filteredStocks} />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <AnimatePresence mode="popLayout">
-                {filteredStocks.map((stock, i) => (
-                  <motion.div
-                    key={stock.ticker}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3, delay: i * 0.03 }}
+          {activeTab === "stocks" && (
+            <motion.div
+              key="stocks"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              {/* Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <p className="text-xs text-muted-foreground">{filteredStocks.length} dari {stocks.length} saham</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center rounded-lg bg-secondary/50 p-0.5 border border-border">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`rounded-md p-2 transition-all ${viewMode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("table")}
+                      className={`rounded-md p-2 transition-all ${viewMode === "table" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <List className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(f => !f)}
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all border ${
+                      showFilters || sectorFilter !== "Semua"
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    <StockCard stock={stock} index={i} />
+                    <Filter className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Filter & Sort</span>
+                    {sectorFilter !== "Semua" && (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[9px] text-primary-foreground">1</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter Panel */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden mb-5"
+                  >
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Sektor</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {sectors.map(s => (
+                            <button
+                              key={s}
+                              onClick={() => setSectorFilter(s)}
+                              className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all border ${
+                                sectorFilter === s
+                                  ? "bg-primary/15 border-primary/40 text-primary"
+                                  : "bg-secondary/30 border-border text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                          {sectorFilter !== "Semua" && (
+                            <button onClick={() => setSectorFilter("Semua")} className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] text-loss hover:bg-loss/10 transition-colors">
+                              <X className="h-3 w-3" /> Reset
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Urutkan</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {sortOptions.map(opt => (
+                            <button
+                              key={opt.key}
+                              onClick={() => toggleSort(opt.key)}
+                              className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all border ${
+                                sortKey === opt.key
+                                  ? "bg-primary/15 border-primary/40 text-primary"
+                                  : "bg-secondary/30 border-border text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {opt.label}
+                              {sortKey === opt.key && <ArrowUpDown className={`h-3 w-3 ${sortDir === "asc" ? "rotate-180" : ""}`} />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
-                ))}
+                )}
               </AnimatePresence>
-            </div>
+
+              {viewMode === "table" ? (
+                <StockTable stocks={filteredStocks} />
+              ) : (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <AnimatePresence mode="popLayout">
+                    {filteredStocks.map((stock, i) => (
+                      <motion.div
+                        key={stock.ticker}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2, delay: i * 0.02 }}
+                      >
+                        <StockCard stock={stock} index={i} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {filteredStocks.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-sm text-muted-foreground">Tidak ada saham ditemukan.</p>
+                  <button onClick={() => setSectorFilter("Semua")} className="mt-2 text-xs text-primary hover:underline">Reset Filter</button>
+                </div>
+              )}
+            </motion.div>
           )}
 
-          {filteredStocks.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">Tidak ada saham ditemukan untuk filter ini.</p>
-              <button onClick={() => setSectorFilter("Semua")} className="mt-2 text-xs text-primary hover:underline">
-                Reset Filter
-              </button>
-            </div>
+          {activeTab === "heatmap" && (
+            <motion.div
+              key="heatmap"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <HeatMap />
+            </motion.div>
           )}
-        </section>
+
+          {activeTab === "sectors" && (
+            <motion.div
+              key="sectors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="max-w-2xl"
+            >
+              <SectorChart />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Footer */}

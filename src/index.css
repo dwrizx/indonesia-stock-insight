@@ -154,7 +154,11 @@
   }
   .glow-loss {
     box-shadow: 0 0 20px hsl(var(--loss) / 0.15);
-  }
+}
+
+/* Hide scrollbar for tab nav */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
   .card-glass {
     background: linear-gradient(135deg, hsl(var(--card) / 0.8) 0%, hsl(var(--card) / 0.4) 100%);
