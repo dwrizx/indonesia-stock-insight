@@ -1,8 +1,22 @@
-import { stocks, sectorData } from "@/data/stockData";
+import {
+  stocks as defaultStocks,
+  sectorData,
+  type Stock,
+} from "@/data/stockData";
 import { motion } from "framer-motion";
 import { MessageSquareText, TrendingUp, TrendingDown } from "lucide-react";
 
-const MarketSummary = () => {
+interface MarketSummaryProps {
+  stocks?: Stock[];
+  updatedAt?: string;
+  source?: "yahoo-live" | "snapshot";
+}
+
+const MarketSummary = ({
+  stocks = defaultStocks,
+  updatedAt,
+  source = "snapshot",
+}: MarketSummaryProps) => {
   const gainCount = stocks.filter((s) => s.change >= 0).length;
   const lossCount = stocks.length - gainCount;
   const isPositive = gainCount > lossCount;
@@ -50,6 +64,12 @@ const MarketSummary = () => {
           />
         </div>
         <div className="flex-1 min-w-0">
+          {(updatedAt || source) && (
+            <p className="mb-2 text-[10px] text-muted-foreground">
+              Data: {source === "yahoo-live" ? "Yahoo Live" : "Snapshot"}
+              {updatedAt ? ` · Update ${updatedAt} WIB` : ""}
+            </p>
+          )}
           <p className="text-xs text-foreground leading-relaxed">
             {summaryText}
           </p>

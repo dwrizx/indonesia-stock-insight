@@ -1,25 +1,50 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { sectorData, stocks, formatRupiah } from "@/data/stockData";
+import {
+  sectorData,
+  stocks as baseStocks,
+  type Stock,
+} from "@/data/stockData";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Cell as BarCell } from "recharts";
 
-const SectorChart = () => {
-  const total = sectorData.reduce((a, b) => a + b.value, 0);
+type SectorChartProps = {
+  stocks?: Stock[];
+};
+
+const SectorChart = ({ stocks = baseStocks }: SectorChartProps) => {
+  const palette = sectorData.map((s) => s.color);
+  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
+
+  const allSectorNames = Array.from(
+    new Set([...sectorData.map((s) => s.name), ...stocks.map((s) => s.sector)]),
+  );
 
   // Calculate sector performance
-  const sectorPerf = sectorData.map((sector) => {
-    const sectorStocks = stocks.filter((s) => s.sector === sector.name);
+  const sectorPerf = allSectorNames.map((sectorName, i) => {
+    const sectorStocks = stocks.filter((s) => s.sector === sectorName);
+    const totalMCap = sectorStocks.reduce(
+      (sum, stock) => sum + stock.marketCap,
+      0,
+    );
     const avgChange =
       sectorStocks.length > 0
         ? sectorStocks.reduce((a, b) => a + b.changePercent, 0) /
           sectorStocks.length
         : 0;
     return {
-      ...sector,
+      name: sectorName,
+      color:
+        sectorColorMap.get(sectorName) ??
+        palette[i % Math.max(palette.length, 1)],
       avgChange: parseFloat(avgChange.toFixed(2)),
       count: sectorStocks.length,
+      value: totalMCap,
     };
   });
+  const total = Math.max(
+    1,
+    sectorPerf.reduce((sum, sector) => sum + sector.value, 0),
+  );
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -40,7 +65,7 @@ const SectorChart = () => {
             </span>
           </div>
           <p className="font-mono text-lg font-extrabold text-foreground">
-            {data.value}%
+            {((data.value / total) * 100).toFixed(1)}%
           </p>
           <div className="mt-1.5 space-y-0.5 text-[10px] text-muted-foreground">
             <p>{sectorStocks.length} saham</p>
@@ -67,7 +92,7 @@ const SectorChart = () => {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={sectorData}
+                data={sectorPerf}
                 cx="50%"
                 cy="50%"
                 innerRadius={40}
@@ -78,7 +103,7 @@ const SectorChart = () => {
                 animationBegin={200}
                 animationDuration={800}
               >
-                {sectorData.map((entry, index) => (
+                {sectorPerf.map((entry, index) => (
                   <Cell
                     key={index}
                     fill={entry.color}
@@ -162,7 +187,7 @@ const SectorChart = () => {
                   />
                 </div>
                 <span className="font-mono text-xs font-bold text-foreground w-8 text-right">
-                  {s.value}%
+                  {((s.value / total) * 100).toFixed(1)}%
                 </span>
               </div>
             </motion.div>

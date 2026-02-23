@@ -51,14 +51,11 @@ import {
   CompareSkeleton,
   ScreeningSkeleton,
 } from "@/components/TabSkeletons";
-import {
-  stocks,
-  marketIndices,
-  sectorData,
-  formatRupiah,
-  formatVolume,
-} from "@/data/stockData";
+import { sectorData, formatRupiah, formatVolume } from "@/data/stockData";
 import { getMarketIndexUrl } from "@/lib/marketIndex";
+import { getMarketSession } from "@/lib/marketSession";
+import { useLiveMarketIndices } from "@/hooks/use-live-market-indices";
+import { useLiveStocks } from "@/hooks/use-live-stocks";
 
 type SortKey = "changePercent" | "pe" | "dividendYield" | "marketCap" | "price";
 type SortDir = "asc" | "desc";
@@ -85,6 +82,9 @@ const Index = () => {
     "overview" | "stocks" | "heatmap" | "sectors" | "compare" | "screening"
   >("overview");
   const [tabLoading, setTabLoading] = useState(false);
+  const liveIndexState = useLiveMarketIndices(60000);
+  const liveStockState = useLiveStocks(120000);
+  const stocks = liveStockState.stocks;
 
   const switchTab = useCallback(
     (tab: typeof activeTab) => {
@@ -114,7 +114,7 @@ const Index = () => {
         : (aVal as number) - (bVal as number);
     });
     return result;
-  }, [sectorFilter, sortKey, sortDir]);
+  }, [stocks, sectorFilter, sortKey, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStocks.length / pageSize));
   const paginatedStocks = useMemo(() => {
@@ -132,7 +132,12 @@ const Index = () => {
     }
   }, [currentPage, totalPages]);
 
-  const now = new Date();
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   const timeStr = now.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
@@ -145,9 +150,13 @@ const Index = () => {
   });
   const gainCount = stocks.filter((s) => s.change >= 0).length;
   const lossCount = stocks.filter((s) => s.change < 0).length;
-  const ihsg = marketIndices[0];
+  const ihsg = liveIndexState.indices[0];
+  const marketSession = getMarketSession(now);
   const totalVolume = stocks.reduce((a, b) => a + b.volume, 0);
   const totalMarketCap = stocks.reduce((a, b) => a + b.marketCap, 0);
+  const allLive =
+    liveStockState.source === "yahoo-live" &&
+    liveIndexState.source === "yahoo-live";
   const tabContainerRef = useRef<HTMLDivElement>(null);
 
   const toggleSort = (key: SortKey) => {
@@ -198,9 +207,22 @@ const Index = () => {
                 <span className="text-muted-foreground/60">WIB</span>
               </div>
               <div className="flex items-center gap-1.5 rounded-lg bg-gain/10 border border-gain/20 px-3 py-1.5">
-                <span className="h-2 w-2 rounded-full bg-gain animate-pulse-glow" />
-                <span className="text-gain font-semibold text-[11px]">
-                  Pasar Buka
+                <span
+                  className={`h-2 w-2 rounded-full ${marketSession.isOpen ? "bg-gain animate-pulse-glow" : "bg-loss"}`}
+                />
+                <span
+                  className={`font-semibold text-[11px] ${marketSession.isOpen ? "text-gain" : "text-loss"}`}
+                >
+                  Pasar {marketSession.shortLabel}
+                </span>
+              </div>
+              <div className="hidden xl:flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-1.5 text-[11px] text-muted-foreground">
+                <Activity
+                  className={`h-3.5 w-3.5 ${allLive ? "text-gain" : "text-primary"}`}
+                />
+                <span>
+                  Saham {liveStockState.updatedAt} · Indeks{" "}
+                  {liveIndexState.updatedAt} WIB
                 </span>
               </div>
             </div>
@@ -220,7 +242,11 @@ const Index = () => {
         </div>
       </header>
 
-      <MarketTicker />
+      <MarketTicker
+        indices={liveIndexState.indices}
+        updatedAt={liveIndexState.updatedAt}
+        source={liveIndexState.source}
+      />
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Hero Section */}
@@ -471,22 +497,30 @@ const Index = () => {
                   className="space-y-6"
                 >
                   {/* Market Summary */}
-                  <MarketSummary />
+                  <MarketSummary
+                    stocks={stocks}
+                    updatedAt={liveStockState.updatedAt}
+                    source={liveStockState.source}
+                  />
 
-                  <MarketOverview />
+                  <MarketOverview
+                    indices={liveIndexState.indices}
+                    updatedAt={liveIndexState.updatedAt}
+                    source={liveIndexState.source}
+                  />
 
                   {/* Sentiment + Most Active */}
                   <div className="grid gap-4 md:grid-cols-2">
-                    <MarketSentiment />
-                    <MostActive />
+                    <MarketSentiment stocks={stocks} />
+                    <MostActive stocks={stocks} />
                   </div>
 
                   <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
-                      <TopMovers />
+                      <TopMovers stocks={stocks} />
                     </div>
                     <div>
-                      <SectorChart />
+                      <SectorChart stocks={stocks} />
                     </div>
                   </div>
                 </motion.div>
@@ -702,7 +736,7 @@ const Index = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <HeatMap />
+                  <HeatMap stocks={stocks} />
                 </motion.div>
               )}
 
@@ -716,9 +750,9 @@ const Index = () => {
                   className="space-y-6"
                 >
                   <div className="max-w-2xl">
-                    <SectorChart />
+                    <SectorChart stocks={stocks} />
                   </div>
-                  <SectorDetail />
+                  <SectorDetail stocks={stocks} />
                 </motion.div>
               )}
 

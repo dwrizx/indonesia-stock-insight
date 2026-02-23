@@ -1,225 +1,421 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  ComposedChart,
-  Line,
-} from "recharts";
-import { generateChartData } from "@/data/stockData";
+  ColorType,
+  createChart,
+  HistogramSeries,
+  LineSeries,
+  type IChartApi,
+  type ISeriesApi,
+  type UTCTimestamp,
+} from "lightweight-charts";
 import { motion } from "framer-motion";
+import { generateChartData } from "@/data/stockData";
+import { getMarketSession } from "@/lib/marketSession";
 
 interface StockChartProps {
   basePrice: number;
   ticker: string;
 }
 
-const periods = [
-  { label: "1M", days: 30 },
-  { label: "3M", days: 90 },
-  { label: "6M", days: 180 },
-  { label: "1Y", days: 365 },
+type PeriodOption = {
+  label: "1D" | "5D" | "1M" | "6M" | "YTD" | "1Y" | "5Y" | "All";
+  range: string;
+  interval: string;
+  fallbackDays: number;
+  tickMode: "time" | "date";
+};
+
+type ChartPoint = {
+  timestamp: number;
+  date: string;
+  price: number;
+  volume: number;
+};
+
+const periods: PeriodOption[] = [
+  {
+    label: "1D",
+    range: "1d",
+    interval: "5m",
+    fallbackDays: 1,
+    tickMode: "time",
+  },
+  {
+    label: "5D",
+    range: "5d",
+    interval: "30m",
+    fallbackDays: 5,
+    tickMode: "date",
+  },
+  {
+    label: "1M",
+    range: "1mo",
+    interval: "1d",
+    fallbackDays: 30,
+    tickMode: "date",
+  },
+  {
+    label: "6M",
+    range: "6mo",
+    interval: "1d",
+    fallbackDays: 180,
+    tickMode: "date",
+  },
+  {
+    label: "YTD",
+    range: "ytd",
+    interval: "1d",
+    fallbackDays: 365,
+    tickMode: "date",
+  },
+  {
+    label: "1Y",
+    range: "1y",
+    interval: "1d",
+    fallbackDays: 365,
+    tickMode: "date",
+  },
+  {
+    label: "5Y",
+    range: "5y",
+    interval: "1wk",
+    fallbackDays: 1825,
+    tickMode: "date",
+  },
+  {
+    label: "All",
+    range: "max",
+    interval: "1mo",
+    fallbackDays: 3650,
+    tickMode: "date",
+  },
 ];
 
+function formatTick(timestamp: number, mode: PeriodOption["tickMode"]): string {
+  const date = new Date(timestamp * 1000);
+  if (mode === "time") {
+    return date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  return date.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+  });
+}
+
+function toYahooChartData(
+  raw: any,
+  mode: PeriodOption["tickMode"],
+): ChartPoint[] {
+  const result = raw?.chart?.result?.[0];
+  const timestamps: number[] = result?.timestamp ?? [];
+  const quote = result?.indicators?.quote?.[0];
+  const closes: Array<number | null> = quote?.close ?? [];
+  const volumes: Array<number | null> = quote?.volume ?? [];
+
+  return timestamps
+    .map((ts, i) => {
+      const close = closes[i];
+      if (typeof close !== "number" || !Number.isFinite(close)) return null;
+      return {
+        timestamp: ts,
+        date: formatTick(ts, mode),
+        price: Math.round(close),
+        volume:
+          typeof volumes[i] === "number" && Number.isFinite(volumes[i])
+            ? volumes[i]
+            : 0,
+      };
+    })
+    .filter((point): point is ChartPoint => point !== null);
+}
+
+function toFallbackData(basePrice: number, days: number): ChartPoint[] {
+  const nowTs = Math.floor(Date.now() / 1000);
+  return generateChartData(basePrice, days).map((point, i) => ({
+    ...point,
+    timestamp: nowTs - (days - i) * 86400,
+  }));
+}
+
 const StockChart = ({ basePrice, ticker }: StockChartProps) => {
-  const [activePeriod, setActivePeriod] = useState(1);
-  const data = useMemo(
-    () => generateChartData(basePrice, periods[activePeriod].days),
-    [basePrice, activePeriod],
+  const [activePeriod, setActivePeriod] = useState(2);
+  const [data, setData] = useState<ChartPoint[]>(
+    toFallbackData(basePrice, periods[2].fallbackDays),
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const [source, setSource] = useState<"yahoo" | "fallback">("fallback");
+  const [updatedAt, setUpdatedAt] = useState("-");
 
-  const minPrice = Math.min(...data.map((d) => d.price)) * 0.98;
-  const maxPrice = Math.max(...data.map((d) => d.price)) * 1.02;
-  const isGain = data[data.length - 1].price >= data[0].price;
-  const gainColor = "hsl(152, 69%, 46%)";
-  const lossColor = "hsl(0, 72%, 55%)";
-  const lineColor = isGain ? gainColor : lossColor;
+  const marketSession = getMarketSession();
 
-  // Calculate moving average
+  const priceContainerRef = useRef<HTMLDivElement>(null);
+  const volumeContainerRef = useRef<HTMLDivElement>(null);
+
+  const priceChartRef = useRef<IChartApi | null>(null);
+  const volumeChartRef = useRef<IChartApi | null>(null);
+
+  const priceSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const maSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+
   const dataWithMA = useMemo(() => {
+    const window = activePeriod <= 1 ? 5 : 7;
     return data.map((d, i) => {
-      const window = 7;
-      if (i < window - 1) return { ...d, ma: null };
+      if (i < window - 1) return { ...d, ma: null as number | null };
       const slice = data.slice(i - window + 1, i + 1);
-      const avg = slice.reduce((a, b) => a + b.price, 0) / window;
+      const avg = slice.reduce((acc, item) => acc + item.price, 0) / window;
       return { ...d, ma: Math.round(avg) };
     });
-  }, [data]);
+  }, [data, activePeriod]);
 
-  const tooltipStyle = {
-    backgroundColor: "hsl(222, 20%, 8%)",
-    border: "1px solid hsl(222, 14%, 16%)",
-    borderRadius: "12px",
-    fontSize: "12px",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-    padding: "12px",
-  };
+  const isGain = data[data.length - 1]?.price >= data[0]?.price;
 
-  const interval = Math.max(Math.floor(data.length / 6), 1);
+  useEffect(() => {
+    let canceled = false;
+    const period = periods[activePeriod];
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+          ticker,
+        )}?range=${period.range}&interval=${period.interval}`;
+        const response = await fetch(url);
+        if (!response.ok)
+          throw new Error(`Yahoo chart request failed: ${response.status}`);
+
+        const raw = await response.json();
+        const parsed = toYahooChartData(raw, period.tickMode);
+        if (!parsed.length) throw new Error("No chart data returned");
+
+        if (!canceled) {
+          setData(parsed);
+          setSource("yahoo");
+          setUpdatedAt(
+            new Date().toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+        }
+      } catch {
+        if (!canceled) {
+          setData(toFallbackData(basePrice, period.fallbackDays));
+          setSource("fallback");
+          setUpdatedAt(
+            new Date().toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          );
+        }
+      } finally {
+        if (!canceled) setIsLoading(false);
+      }
+    };
+
+    load();
+    const refreshMs = activePeriod <= 1 ? 30000 : 120000;
+    const timer = window.setInterval(load, refreshMs);
+    return () => {
+      canceled = true;
+      window.clearInterval(timer);
+    };
+  }, [activePeriod, basePrice, ticker]);
+
+  useEffect(() => {
+    if (!priceContainerRef.current || !volumeContainerRef.current) return;
+
+    const priceChart = createChart(priceContainerRef.current, {
+      width: priceContainerRef.current.clientWidth,
+      height: 320,
+      layout: {
+        textColor: "hsl(215, 15%, 60%)",
+        background: { type: ColorType.Solid, color: "transparent" },
+      },
+      grid: {
+        vertLines: { color: "hsl(222, 14%, 12%)" },
+        horzLines: { color: "hsl(222, 14%, 12%)" },
+      },
+      rightPriceScale: {
+        borderColor: "hsl(222, 14%, 16%)",
+      },
+      timeScale: {
+        borderColor: "hsl(222, 14%, 16%)",
+        timeVisible: activePeriod <= 1,
+        secondsVisible: false,
+      },
+    });
+
+    const volumeChart = createChart(volumeContainerRef.current, {
+      width: volumeContainerRef.current.clientWidth,
+      height: 140,
+      layout: {
+        textColor: "hsl(215, 15%, 60%)",
+        background: { type: ColorType.Solid, color: "transparent" },
+      },
+      grid: {
+        vertLines: { color: "hsl(222, 14%, 12%)" },
+        horzLines: { color: "hsl(222, 14%, 12%)" },
+      },
+      rightPriceScale: {
+        borderColor: "hsl(222, 14%, 16%)",
+      },
+      timeScale: {
+        borderColor: "hsl(222, 14%, 16%)",
+        timeVisible: activePeriod <= 1,
+        secondsVisible: false,
+      },
+    });
+
+    const priceSeries = priceChart.addSeries(LineSeries, {
+      color: "hsl(152, 69%, 46%)",
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: true,
+    });
+
+    const maSeries = priceChart.addSeries(LineSeries, {
+      color: "hsl(45, 93%, 58%)",
+      lineWidth: 1,
+      lineStyle: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+
+    const volumeSeries = volumeChart.addSeries(HistogramSeries, {
+      priceFormat: { type: "volume" },
+      color: "hsl(45, 93%, 58%)",
+    });
+
+    priceChartRef.current = priceChart;
+    volumeChartRef.current = volumeChart;
+    priceSeriesRef.current = priceSeries;
+    maSeriesRef.current = maSeries;
+    volumeSeriesRef.current = volumeSeries;
+
+    const resize = () => {
+      if (priceContainerRef.current) {
+        priceChart.applyOptions({
+          width: priceContainerRef.current.clientWidth,
+        });
+      }
+      if (volumeContainerRef.current) {
+        volumeChart.applyOptions({
+          width: volumeContainerRef.current.clientWidth,
+        });
+      }
+    };
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(priceContainerRef.current);
+    observer.observe(volumeContainerRef.current);
+
+    return () => {
+      observer.disconnect();
+      priceChart.remove();
+      volumeChart.remove();
+      priceChartRef.current = null;
+      volumeChartRef.current = null;
+      priceSeriesRef.current = null;
+      maSeriesRef.current = null;
+      volumeSeriesRef.current = null;
+    };
+  }, [activePeriod]);
+
+  useEffect(() => {
+    if (
+      !priceSeriesRef.current ||
+      !maSeriesRef.current ||
+      !volumeSeriesRef.current
+    )
+      return;
+
+    priceSeriesRef.current.applyOptions({
+      color: isGain ? "hsl(152, 69%, 46%)" : "hsl(0, 72%, 55%)",
+    });
+
+    priceSeriesRef.current.setData(
+      dataWithMA.map((point) => ({
+        time: point.timestamp as UTCTimestamp,
+        value: point.price,
+      })),
+    );
+
+    maSeriesRef.current.setData(
+      dataWithMA
+        .filter((point) => typeof point.ma === "number")
+        .map((point) => ({
+          time: point.timestamp as UTCTimestamp,
+          value: point.ma as number,
+        })),
+    );
+
+    volumeSeriesRef.current.setData(
+      dataWithMA.map((point) => ({
+        time: point.timestamp as UTCTimestamp,
+        value: point.volume,
+        color:
+          point.price >= (point.ma ?? point.price)
+            ? "hsl(152, 69%, 46%)"
+            : "hsl(0, 72%, 55%)",
+      })),
+    );
+
+    priceChartRef.current?.timeScale().fitContent();
+    volumeChartRef.current?.timeScale().fitContent();
+  }, [dataWithMA, isGain]);
 
   return (
     <div className="space-y-4">
-      {/* Period Selector */}
-      <div className="flex items-center gap-1 rounded-lg bg-secondary/50 p-1 w-fit">
-        {periods.map((p, i) => (
-          <button
-            key={p.label}
-            onClick={() => setActivePeriod(i)}
-            className={`rounded-md px-4 py-1.5 text-xs font-bold transition-all ${
-              activePeriod === i
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1 rounded-lg bg-secondary/50 p-1 w-fit">
+          {periods.map((p, i) => (
+            <button
+              key={p.label}
+              onClick={() => setActivePeriod(i)}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold transition-all ${
+                activePeriod === i
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="text-[10px] text-muted-foreground">
+          Sumber: {source === "yahoo" ? "Yahoo Live" : "Fallback"} · Update{" "}
+          {updatedAt} · Pasar {marketSession.shortLabel}
+        </div>
       </div>
 
-      {/* Price Chart */}
       <motion.div
-        key={activePeriod}
+        key={`lw-price-${activePeriod}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.2 }}
         className="card-shine rounded-xl border border-border p-5"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Harga Saham — {periods[activePeriod].label}
+            Harga Saham - {periods[activePeriod].label}
           </h3>
-          <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-0.5 w-4 rounded"
-                style={{ backgroundColor: lineColor }}
-              />
-              <span>Harga</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-0.5 w-4 rounded bg-primary/60"
-                style={{ borderTop: "1px dashed hsl(45,93%,58%)" }}
-              />
-              <span>MA(7)</span>
-            </div>
-          </div>
+          {isLoading && (
+            <span className="text-[10px] text-muted-foreground">Memuat...</span>
+          )}
         </div>
-        <ResponsiveContainer width="100%" height={320}>
-          <ComposedChart data={dataWithMA}>
-            <defs>
-              <linearGradient id={`grad-${ticker}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={lineColor} stopOpacity={0.25} />
-                <stop offset="50%" stopColor={lineColor} stopOpacity={0.08} />
-                <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(222, 14%, 12%)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              interval={interval}
-            />
-            <YAxis
-              domain={[minPrice, maxPrice]}
-              tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `${(v / 1000).toFixed(1)}k`}
-              width={45}
-            />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              labelStyle={{
-                color: "hsl(215, 15%, 50%)",
-                marginBottom: "6px",
-                fontSize: "11px",
-              }}
-              formatter={(value: number, name: string) => {
-                if (name === "ma")
-                  return [
-                    `Rp${value?.toLocaleString("id-ID") ?? "-"}`,
-                    "MA(7)",
-                  ];
-                return [`Rp${value.toLocaleString("id-ID")}`, "Harga"];
-              }}
-              cursor={{ stroke: "hsl(215, 15%, 25%)", strokeDasharray: "4 4" }}
-            />
-            <Area
-              type="monotone"
-              dataKey="price"
-              stroke={lineColor}
-              strokeWidth={2}
-              fill={`url(#grad-${ticker})`}
-            />
-            <Line
-              type="monotone"
-              dataKey="ma"
-              stroke="hsl(45, 93%, 58%)"
-              strokeWidth={1}
-              strokeDasharray="4 4"
-              dot={false}
-              connectNulls
-              opacity={0.6}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+        <div ref={priceContainerRef} className="h-[320px] w-full" />
       </motion.div>
 
-      {/* Volume Chart */}
       <div className="card-shine rounded-xl border border-border p-5">
         <h3 className="mb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Volume Perdagangan
         </h3>
-        <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={data}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(222, 14%, 12%)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              interval={interval}
-            />
-            <YAxis
-              tick={{ fill: "hsl(215, 15%, 40%)", fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`}
-              width={45}
-            />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              formatter={(value: number) => [
-                `${(value / 1e6).toFixed(1)}M lot`,
-                "Volume",
-              ]}
-              cursor={{ fill: "hsl(222, 14%, 14%)" }}
-            />
-            <Bar
-              dataKey="volume"
-              fill="hsl(45, 93%, 58%)"
-              opacity={0.3}
-              radius={[3, 3, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        <div ref={volumeContainerRef} className="h-[140px] w-full" />
       </div>
     </div>
   );

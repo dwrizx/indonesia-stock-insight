@@ -1,4 +1,4 @@
-import { stocks } from "@/data/stockData";
+import { stocks as defaultStocks, type Stock } from "@/data/stockData";
 import {
   TrendingUp,
   TrendingDown,
@@ -17,7 +17,11 @@ const rankColors = [
   "bg-orange-500/20 text-orange-400 border-orange-500/30",
 ];
 
-const TopMovers = () => {
+interface TopMoversProps {
+  stocks?: Stock[];
+}
+
+const TopMovers = ({ stocks = defaultStocks }: TopMoversProps) => {
   const navigate = useNavigate();
   const sorted = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
   const gainers = sorted.filter((s) => s.change >= 0).slice(0, 5);

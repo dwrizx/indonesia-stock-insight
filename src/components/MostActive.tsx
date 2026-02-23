@@ -1,9 +1,17 @@
-import { stocks, formatVolume } from "@/data/stockData";
+import {
+  stocks as defaultStocks,
+  formatVolume,
+  type Stock,
+} from "@/data/stockData";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Zap, TrendingUp, TrendingDown } from "lucide-react";
 
-const MostActive = () => {
+interface MostActiveProps {
+  stocks?: Stock[];
+}
+
+const MostActive = ({ stocks = defaultStocks }: MostActiveProps) => {
   const navigate = useNavigate();
   const sorted = [...stocks].sort((a, b) => b.volume - a.volume).slice(0, 5);
   const maxVol = sorted[0]?.volume || 1;

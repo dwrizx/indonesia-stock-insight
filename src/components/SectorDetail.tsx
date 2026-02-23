@@ -1,13 +1,13 @@
 import {
-  stocks,
+  stocks as baseStocks,
+  type Stock,
   sectorData,
   formatRupiah,
-  formatVolume,
 } from "@/data/stockData";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { ChevronDown, TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
+import { Fragment, useState } from "react";
+import { ChevronDown, BarChart3 } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -18,13 +18,22 @@ import {
   Cell,
 } from "recharts";
 
-const SectorDetail = () => {
+type SectorDetailProps = {
+  stocks?: Stock[];
+};
+
+const SectorDetail = ({ stocks = baseStocks }: SectorDetailProps) => {
   const navigate = useNavigate();
   const [expandedSector, setExpandedSector] = useState<string | null>(null);
+  const palette = sectorData.map((s) => s.color);
+  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
+  const allSectorNames = Array.from(
+    new Set([...sectorData.map((s) => s.name), ...stocks.map((s) => s.sector)]),
+  );
 
-  const sectorStats = sectorData
-    .map((sector) => {
-      const sectorStocks = stocks.filter((s) => s.sector === sector.name);
+  const sectorStats = allSectorNames
+    .map((sectorName, i) => {
+      const sectorStocks = stocks.filter((s) => s.sector === sectorName);
       const avgChange =
         sectorStocks.length > 0
           ? sectorStocks.reduce((a, b) => a + b.changePercent, 0) /
@@ -42,7 +51,9 @@ const SectorDetail = () => {
           : 0;
       const totalMCap = sectorStocks.reduce((a, b) => a + b.marketCap, 0);
       return {
-        ...sector,
+        name: sectorName,
+        color:
+          sectorColorMap.get(sectorName) ?? palette[i % Math.max(palette.length, 1)],
         stocks: sectorStocks,
         count: sectorStocks.length,
         avgChange,
@@ -51,7 +62,10 @@ const SectorDetail = () => {
         totalMCap,
       };
     })
-    .sort((a, b) => b.avgChange - a.avgChange);
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return b.avgChange - a.avgChange;
+    });
 
   const barData = sectorStats.map((s) => ({
     name: s.name.substring(0, 6),
@@ -158,10 +172,9 @@ const SectorDetail = () => {
               </tr>
             </thead>
             <tbody>
-              {sectorStats.map((sector, i) => (
-                <>
+              {sectorStats.map((sector) => (
+                <Fragment key={sector.name}>
                   <tr
-                    key={sector.name}
                     onClick={() =>
                       setExpandedSector(
                         expandedSector === sector.name ? null : sector.name,
@@ -262,7 +275,7 @@ const SectorDetail = () => {
                       </motion.tr>
                     )}
                   </AnimatePresence>
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

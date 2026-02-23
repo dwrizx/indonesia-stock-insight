@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
-  stocks,
+  stocks as baseStocks,
+  type Stock,
   formatRupiah,
   formatVolume,
   sectorData,
@@ -8,27 +9,38 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Eye,
   BarChart2,
   DollarSign,
   TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 
 type ViewMode = "change" | "volume" | "marketCap";
 
-const HeatMap = () => {
+type HeatMapProps = {
+  stocks?: Stock[];
+};
+
+const HeatMap = ({ stocks = baseStocks }: HeatMapProps) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("change");
   const [hoveredTicker, setHoveredTicker] = useState<string | null>(null);
+  const palette = sectorData.map((s) => s.color);
+  const sectorColorMap = new Map(sectorData.map((s) => [s.name, s.color]));
 
   const maxAbsChange = Math.max(
+    1,
     ...stocks.map((s) => Math.abs(s.changePercent)),
   );
-  const maxVolume = Math.max(...stocks.map((s) => s.volume));
-  const maxMCap = Math.max(...stocks.map((s) => s.marketCap));
+  const maxVolume = Math.max(1, ...stocks.map((s) => s.volume));
+  const maxMCap = Math.max(1, ...stocks.map((s) => s.marketCap));
 
-  const getIntensity = (stock: (typeof stocks)[0]) => {
+  const sectorNames = Array.from(new Set(stocks.map((s) => s.sector))).sort();
+  const sectorList = sectorNames.map((name, i) => ({
+    name,
+    color: sectorColorMap.get(name) ?? palette[i % palette.length],
+  }));
+
+  const getIntensity = (stock: Stock) => {
     switch (viewMode) {
       case "change":
         return Math.abs(stock.changePercent) / maxAbsChange;
@@ -39,7 +51,7 @@ const HeatMap = () => {
     }
   };
 
-  const getColor = (stock: (typeof stocks)[0], intensity: number) => {
+  const getColor = (stock: Stock, intensity: number) => {
     if (viewMode === "change") {
       const isGain = stock.change >= 0;
       return {
@@ -57,7 +69,7 @@ const HeatMap = () => {
     };
   };
 
-  const getValue = (stock: (typeof stocks)[0]) => {
+  const getValue = (stock: Stock) => {
     switch (viewMode) {
       case "change":
         return `${stock.change >= 0 ? "+" : ""}${stock.changePercent.toFixed(2)}%`;
@@ -69,15 +81,17 @@ const HeatMap = () => {
   };
 
   // Group by sector
-  const groupedBySector = sectorData.map((sector) => ({
+  const groupedBySector = sectorList.map((sector) => ({
     ...sector,
     stocks: stocks
       .filter((s) => s.sector === sector.name)
       .sort((a, b) => b.marketCap - a.marketCap),
-  }));
+  }))
+    .filter((sector) => sector.stocks.length > 0)
+    .sort((a, b) => b.stocks.length - a.stocks.length);
 
   // Size class based on market cap
-  const getSizeClass = (stock: (typeof stocks)[0]) => {
+  const getSizeClass = (stock: Stock) => {
     const ratio = stock.marketCap / maxMCap;
     if (ratio > 0.4) return "col-span-2 row-span-2";
     if (ratio > 0.15) return "col-span-2";

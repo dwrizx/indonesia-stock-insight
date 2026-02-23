@@ -1,8 +1,12 @@
-import { stocks } from "@/data/stockData";
+import { stocks as defaultStocks, type Stock } from "@/data/stockData";
 import { motion } from "framer-motion";
 import { Gauge, TrendingUp, TrendingDown, Activity } from "lucide-react";
 
-const MarketSentiment = () => {
+interface MarketSentimentProps {
+  stocks?: Stock[];
+}
+
+const MarketSentiment = ({ stocks = defaultStocks }: MarketSentimentProps) => {
   const gainCount = stocks.filter((s) => s.change >= 0).length;
   const totalStocks = stocks.length;
   const avgChange =
