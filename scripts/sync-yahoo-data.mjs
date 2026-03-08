@@ -22,7 +22,7 @@ const DEFAULT_STOCK_TICKERS = [
 const INDEX_SYMBOLS = [
   { name: "IHSG", symbol: "^JKSE" },
   { name: "LQ45", symbol: "^JKLQ45" },
-  { name: "IDX30", symbol: "^JKIDX30" },
+  { name: "IDX30", symbol: "IDX30.JK" },
   { name: "JII", symbol: "^JKII" },
 ];
 

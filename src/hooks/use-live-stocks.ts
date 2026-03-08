@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { stocks as baseStocks, type Stock } from "@/data/stockData";
+import { yahooSnapshot } from "@/data/yahooSnapshot";
+import {
+  collectQuoteRowsFromSettled,
+  mergeStocksWithQuotes,
+} from "@/lib/liveStocks";
 
 type LiveStocksState = {
   stocks: Stock[];
@@ -10,10 +15,15 @@ type LiveStocksState = {
 
 const BATCH_SIZE = 80;
 
-function asNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : undefined;
+function formatTime(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -24,15 +34,11 @@ function chunk<T>(items: T[], size: number): T[][] {
   return batches;
 }
 
+const SNAPSHOT_UPDATED_AT = formatTime(yahooSnapshot.generatedAt);
+
 export function useLiveStocks(refreshMs: number = 120000): LiveStocksState {
   const [stocks, setStocks] = useState<Stock[]>(baseStocks);
-  const [updatedAt, setUpdatedAt] = useState<string>(
-    new Date().toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-  );
+  const [updatedAt, setUpdatedAt] = useState<string>(SNAPSHOT_UPDATED_AT);
   const [source, setSource] = useState<"yahoo-live" | "snapshot">("snapshot");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -44,7 +50,7 @@ export function useLiveStocks(refreshMs: number = 120000): LiveStocksState {
     const fetchLive = async () => {
       setLoading(true);
       try {
-        const results = await Promise.all(
+        const settled = await Promise.allSettled(
           batches.map(async (symbols) => {
             const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(
               symbols.join(","),
@@ -57,60 +63,22 @@ export function useLiveStocks(refreshMs: number = 120000): LiveStocksState {
           }),
         );
 
-        const flat = results.flat();
-        const byTicker = new Map<string, any>(
-          flat
-            .filter((row: any) => typeof row?.symbol === "string")
-            .map((row: any) => [row.symbol as string, row]),
-        );
-
-        const merged = baseStocks.map((stock) => {
-          const quote = byTicker.get(stock.ticker);
-          if (!quote) return stock;
-
-          const price = asNumber(quote.regularMarketPrice) ?? stock.price;
-          const prevClose =
-            asNumber(quote.regularMarketPreviousClose) ?? stock.prevClose;
-          const change = asNumber(quote.regularMarketChange) ?? stock.change;
-          const changePercent =
-            asNumber(quote.regularMarketChangePercent) ??
-            (prevClose > 0
-              ? ((price - prevClose) / prevClose) * 100
-              : stock.changePercent);
-
-          return {
-            ...stock,
-            name:
-              (typeof quote.longName === "string" && quote.longName) ||
-              (typeof quote.shortName === "string" && quote.shortName) ||
-              stock.name,
-            price,
-            change,
-            changePercent,
-            volume: asNumber(quote.regularMarketVolume) ?? stock.volume,
-            marketCap: asNumber(quote.marketCap) ?? stock.marketCap,
-            open: asNumber(quote.regularMarketOpen) ?? stock.open,
-            high: asNumber(quote.regularMarketDayHigh) ?? stock.high,
-            low: asNumber(quote.regularMarketDayLow) ?? stock.low,
-            prevClose,
-          };
-        });
+        const quoteRows = collectQuoteRowsFromSettled(settled);
 
         if (!canceled) {
-          setStocks(merged);
-          setSource("yahoo-live");
-          setUpdatedAt(
-            new Date().toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          );
+          if (quoteRows.length > 0) {
+            setStocks((current) => mergeStocksWithQuotes(current, quoteRows));
+            setSource("yahoo-live");
+            setUpdatedAt(formatTime(new Date()));
+          } else {
+            setSource("snapshot");
+            setUpdatedAt(SNAPSHOT_UPDATED_AT);
+          }
         }
       } catch {
         if (!canceled) {
-          setStocks(baseStocks);
           setSource("snapshot");
+          setUpdatedAt(SNAPSHOT_UPDATED_AT);
         }
       } finally {
         if (!canceled) setLoading(false);

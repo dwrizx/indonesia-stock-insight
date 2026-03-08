@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { marketIndices, type MarketIndex } from "@/data/stockData";
+import { yahooSnapshot } from "@/data/yahooSnapshot";
+import {
+  MARKET_INDEX_QUOTES,
+  getMarketIndexQuoteCandidates,
+  getMarketIndexQuoteSymbols,
+} from "@/lib/marketIndex";
 
 type LiveState = {
   indices: MarketIndex[];
@@ -8,28 +14,28 @@ type LiveState = {
   loading: boolean;
 };
 
-const INDEX_SYMBOLS: Array<{ name: string; symbol: string }> = [
-  { name: "IHSG", symbol: "^JKSE" },
-  { name: "LQ45", symbol: "^JKLQ45" },
-  { name: "IDX30", symbol: "^JKIDX30" },
-  { name: "JII", symbol: "^JKII" },
-];
-
 function asNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value)
     ? value
     : undefined;
 }
 
+function formatTime(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+const SNAPSHOT_UPDATED_AT = formatTime(yahooSnapshot.generatedAt);
+
 export function useLiveMarketIndices(refreshMs: number = 60000): LiveState {
   const [indices, setIndices] = useState<MarketIndex[]>(marketIndices);
-  const [updatedAt, setUpdatedAt] = useState<string>(
-    new Date().toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-  );
+  const [updatedAt, setUpdatedAt] = useState<string>(SNAPSHOT_UPDATED_AT);
   const [source, setSource] = useState<"yahoo-live" | "snapshot">("snapshot");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -39,7 +45,7 @@ export function useLiveMarketIndices(refreshMs: number = 60000): LiveState {
     const fetchLive = async () => {
       setLoading(true);
       try {
-        const symbols = INDEX_SYMBOLS.map((s) => s.symbol).join(",");
+        const symbols = getMarketIndexQuoteSymbols().join(",");
         const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Yahoo quote failed: ${res.status}`);
@@ -54,36 +60,32 @@ export function useLiveMarketIndices(refreshMs: number = 60000): LiveState {
             .map((q) => [q.symbol as string, q]),
         );
 
-        const next = INDEX_SYMBOLS.map(({ name, symbol }, i) => {
-          const fallback = marketIndices[i];
-          const quote = bySymbol.get(symbol);
-          if (!quote) return fallback;
-
-          return {
-            name,
-            value: asNumber(quote.regularMarketPrice) ?? fallback.value,
-            change: asNumber(quote.regularMarketChange) ?? fallback.change,
-            changePercent:
-              asNumber(quote.regularMarketChangePercent) ??
-              fallback.changePercent,
-          };
-        });
-
         if (!canceled) {
-          setIndices(next);
-          setSource("yahoo-live");
-          setUpdatedAt(
-            new Date().toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
+          setIndices((current) =>
+            MARKET_INDEX_QUOTES.map(({ name }, i) => {
+              const fallback = current[i] ?? marketIndices[i];
+              const quote = getMarketIndexQuoteCandidates(name)
+                .map((symbol) => bySymbol.get(symbol))
+                .find(Boolean);
+              if (!quote) return fallback;
+
+              return {
+                name,
+                value: asNumber(quote.regularMarketPrice) ?? fallback.value,
+                change: asNumber(quote.regularMarketChange) ?? fallback.change,
+                changePercent:
+                  asNumber(quote.regularMarketChangePercent) ??
+                  fallback.changePercent,
+              };
             }),
           );
+          setSource("yahoo-live");
+          setUpdatedAt(formatTime(new Date()));
         }
       } catch {
         if (!canceled) {
-          setIndices(marketIndices);
           setSource("snapshot");
+          setUpdatedAt(SNAPSHOT_UPDATED_AT);
         }
       } finally {
         if (!canceled) setLoading(false);
