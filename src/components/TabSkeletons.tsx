@@ -239,3 +239,10 @@ export const ScreeningSkeleton = () => (
     </div>
   </motion.div>
 );
+
+export const FloatSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    <div className="h-48 rounded-2xl bg-secondary/60" />
+    <div className="h-96 rounded-xl bg-secondary/40" />
+  </div>
+);

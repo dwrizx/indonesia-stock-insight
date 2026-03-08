@@ -50,6 +50,7 @@ import StockScreener from "@/components/StockScreener";
 import AIStockAnalysis from "@/components/AIStockAnalysis";
 import OwnershipNetwork from "@/components/OwnershipNetwork";
 import ConglomerateMaps from "@/components/ConglomerateMaps";
+import FloatScreener from "@/components/FloatScreener";
 import {
   OverviewSkeleton,
   StocksSkeleton,
@@ -57,6 +58,7 @@ import {
   SectorSkeleton,
   CompareSkeleton,
   ScreeningSkeleton,
+  FloatSkeleton,
 } from "@/components/TabSkeletons";
 import {
   formatRupiah,
@@ -99,6 +101,7 @@ const Index = () => {
     | "ai"
     | "ownership"
     | "conglomerates"
+    | "float"
   >("overview");
   const [tabLoading, setTabLoading] = useState(false);
   const liveIndexState = useLiveMarketIndices(60000);
@@ -440,6 +443,13 @@ const Index = () => {
                   <Network className="h-3.5 w-3.5 text-primary" />
                   Conglomerate Maps
                 </button>
+                <button
+                  onClick={() => switchTab("float")}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-primary/35"
+                >
+                  <BarChart2 className="h-3.5 w-3.5 text-primary" />
+                  Float Screener
+                </button>
               </div>
             </div>
           </div>
@@ -505,6 +515,12 @@ const Index = () => {
               icon: Network,
               badge: null,
             },
+            {
+              key: "float" as const,
+              label: "Float Screener",
+              icon: BarChart2,
+              badge: null,
+            },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -556,6 +572,7 @@ const Index = () => {
               {activeTab === "ai" && <SectorSkeleton />}
               {activeTab === "ownership" && <SectorSkeleton />}
               {activeTab === "conglomerates" && <SectorSkeleton />}
+              {activeTab === "float" && <FloatSkeleton />}
             </motion.div>
           ) : (
             <>
@@ -898,6 +915,18 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <ConglomerateMaps stocks={stocks} />
+                </motion.div>
+              )}
+
+              {activeTab === "float" && (
+                <motion.div
+                  key="float"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <FloatScreener />
                 </motion.div>
               )}
             </>
