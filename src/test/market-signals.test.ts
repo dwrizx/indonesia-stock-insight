@@ -62,4 +62,3 @@ describe("generateMarketSignals", () => {
     expect(result.active.some((s) => s.ticker === "ACT.JK")).toBe(true);
   });
 });
-

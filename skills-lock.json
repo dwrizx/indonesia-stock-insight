@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "openrouter": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "computedHash": "b59d8682e25c33984f53a35b25bf620e19eea5ea3a9c7102db7d2910c2a6d60a"
+    }
+  }
+}

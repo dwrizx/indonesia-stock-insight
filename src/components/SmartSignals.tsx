@@ -97,4 +97,3 @@ const SmartSignals = ({ stocks }: SmartSignalsProps) => {
 };
 
 export default SmartSignals;
-

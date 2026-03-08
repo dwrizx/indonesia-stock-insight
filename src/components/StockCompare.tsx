@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   stocks,
   Stock,
@@ -22,6 +24,17 @@ import {
   formatVolume,
   generateChartData,
 } from "@/data/stockData";
+import {
+  chatWithOpenRouter,
+  fetchOpenRouterModels,
+  sortOpenRouterModels,
+  type OpenRouterModel,
+} from "@/lib/openrouter";
+import {
+  buildBrokerConsensus,
+  buildTechnicalInsight,
+  getActionSignal,
+} from "@/lib/aiInsight";
 import {
   LineChart as ReLineChart,
   Line,
@@ -39,6 +52,10 @@ interface ComparisonPair {
   description: string;
   tickers: [string, string];
 }
+type ModelScope = "zero" | "free" | "all";
+type ModelSort = "newest" | "oldest" | "name-asc" | "name-desc";
+type IndicatorTone = "good" | "warn" | "bad";
+type InsightDepth = "standard" | "detail" | "ultra";
 
 const prebuiltComparisons: ComparisonPair[] = [
   {
@@ -82,6 +99,20 @@ const prebuiltComparisons: ComparisonPair[] = [
     tickers: ["ACES.JK", "MAPI.JK"],
   },
 ];
+
+function extractTickerMentions(text: string): string[] {
+  const matches = text.match(/\b[A-Z]{4}(?:\.JK)?\b/g) ?? [];
+  return matches
+    .map((item) => (item.endsWith(".JK") ? item : `${item}.JK`))
+    .filter((item, index, arr) => arr.indexOf(item) === index);
+}
+
+function toneClass(tone: IndicatorTone): string {
+  if (tone === "good") return "bg-gain/15 text-gain border-gain/25";
+  if (tone === "warn")
+    return "bg-amber-500/15 text-amber-400 border-amber-500/25";
+  return "bg-loss/15 text-loss border-loss/25";
+}
 
 function getSignal(stock: Stock): { label: string; color: string } {
   const score =
@@ -229,6 +260,24 @@ const StockCompare = () => {
   const [chartMode, setChartMode] = useState<"absolute" | "percent">(
     "absolute",
   );
+  const [aiModels, setAiModels] = useState<OpenRouterModel[]>([]);
+  const [aiModel, setAiModel] = useState<string>("");
+  const [aiModelScope, setAiModelScope] = useState<ModelScope>("zero");
+  const [aiModelSort, setAiModelSort] = useState<ModelSort>("newest");
+  const [aiModelQuery, setAiModelQuery] = useState<string>("");
+  const [insightDepth, setInsightDepth] = useState<InsightDepth>("detail");
+  const [easyLanguage, setEasyLanguage] = useState<boolean>(true);
+  const [mustCoverAllIndicators, setMustCoverAllIndicators] =
+    useState<boolean>(true);
+  const [activeIndicator, setActiveIndicator] = useState<
+    "technical" | "rsi" | "macd" | "trend" | "volume"
+  >("technical");
+  const [aiInsightLoading, setAiInsightLoading] = useState<boolean>(false);
+  const [aiInsightMarkdown, setAiInsightMarkdown] = useState<string>("");
+  const [aiInsightGeneratedAt, setAiInsightGeneratedAt] = useState<
+    number | null
+  >(null);
+  const [aiInsightError, setAiInsightError] = useState<string>("");
   const navigate = useNavigate();
 
   const stockA = stocks.find((s) => s.ticker === tickerA)!;
@@ -236,6 +285,17 @@ const StockCompare = () => {
 
   const signalA = getSignal(stockA);
   const signalB = getSignal(stockB);
+  const technicalA = useMemo(() => buildTechnicalInsight(stockA), [stockA]);
+  const technicalB = useMemo(() => buildTechnicalInsight(stockB), [stockB]);
+  const consensusA = useMemo(() => buildBrokerConsensus(stockA), [stockA]);
+  const consensusB = useMemo(() => buildBrokerConsensus(stockB), [stockB]);
+  const hasApiKey = useMemo(
+    () =>
+      Boolean(
+        (import.meta.env.VITE_OPENROUTER_API_KEY as string | undefined)?.trim(),
+      ),
+    [],
+  );
 
   const seedA = stockA.price % 17;
   const seedB = stockB.price % 17;
@@ -381,6 +441,277 @@ const StockCompare = () => {
   const macdB = getMACDValues(seedB);
   const ratingsA = getAnalystRatings(seedA);
   const ratingsB = getAnalystRatings(seedB);
+  const aiMentionedStocks = useMemo(() => {
+    if (!aiInsightMarkdown) return [];
+    return extractTickerMentions(aiInsightMarkdown)
+      .filter((ticker) => ticker !== tickerA && ticker !== tickerB)
+      .map((ticker) => stocks.find((item) => item.ticker === ticker))
+      .filter((item): item is Stock => Boolean(item))
+      .slice(0, 8);
+  }, [aiInsightMarkdown, tickerA, tickerB]);
+  const aiFreeCount = aiModels.filter((item) => item.isFree).length;
+  const aiZeroPriceCount = aiModels.filter(
+    (item) => item.promptPrice === 0 && item.completionPrice === 0,
+  ).length;
+  const aiModelOptions = useMemo(() => {
+    let next = [...aiModels];
+    if (aiModelScope === "free") next = next.filter((item) => item.isFree);
+    if (aiModelScope === "zero") {
+      next = next.filter(
+        (item) => item.promptPrice === 0 && item.completionPrice === 0,
+      );
+    }
+    const q = aiModelQuery.trim().toLowerCase();
+    if (q) {
+      next = next.filter(
+        (item) =>
+          item.id.toLowerCase().includes(q) ||
+          item.name.toLowerCase().includes(q),
+      );
+    }
+    return sortOpenRouterModels(next, aiModelSort);
+  }, [aiModels, aiModelScope, aiModelQuery, aiModelSort]);
+  const indicatorRows = useMemo(() => {
+    const rsiTone = (v: number): IndicatorTone =>
+      v >= 45 && v <= 65 ? "good" : v >= 35 && v <= 75 ? "warn" : "bad";
+    const macdTone = (v: number): IndicatorTone =>
+      v > 1 ? "good" : v >= -1 ? "warn" : "bad";
+    const trendTone = (
+      price: number,
+      ema20: number,
+      ema50: number,
+    ): IndicatorTone =>
+      price > ema20 && ema20 > ema50 ? "good" : price > ema50 ? "warn" : "bad";
+    const volumeTone = (v: number): IndicatorTone =>
+      v >= 70 ? "good" : v >= 45 ? "warn" : "bad";
+
+    return [
+      {
+        key: "technical" as const,
+        label: "Technical Score",
+        aValue: `${technicalA.totalScore}/100`,
+        bValue: `${technicalB.totalScore}/100`,
+        aTone:
+          technicalA.totalScore >= 70
+            ? "good"
+            : technicalA.totalScore >= 45
+              ? "warn"
+              : "bad",
+        bTone:
+          technicalB.totalScore >= 70
+            ? "good"
+            : technicalB.totalScore >= 45
+              ? "warn"
+              : "bad",
+        note: "Skor gabungan MA, RSI, MACD, volume, dan broker consensus.",
+      },
+      {
+        key: "rsi" as const,
+        label: "RSI",
+        aValue: rsiA.toFixed(1),
+        bValue: rsiB.toFixed(1),
+        aTone: rsiTone(rsiA),
+        bTone: rsiTone(rsiB),
+        note: "Zona sehat biasanya 45-65; ekstrem bisa overbought/oversold.",
+      },
+      {
+        key: "macd" as const,
+        label: "MACD Histogram",
+        aValue: macdA.histogram.toFixed(2),
+        bValue: macdB.histogram.toFixed(2),
+        aTone: macdTone(macdA.histogram),
+        bTone: macdTone(macdB.histogram),
+        note: "Nilai positif cenderung momentum bullish, negatif cenderung bearish.",
+      },
+      {
+        key: "trend" as const,
+        label: "Trend (Price vs EMA20/EMA50)",
+        aValue: `${Math.round(stockA.price)} / ${Math.round(ema20A)} / ${Math.round(ema50A)}`,
+        bValue: `${Math.round(stockB.price)} / ${Math.round(ema20B)} / ${Math.round(ema50B)}`,
+        aTone: trendTone(stockA.price, ema20A, ema50A),
+        bTone: trendTone(stockB.price, ema20B, ema50B),
+        note: "Urutan ideal bullish: Price > EMA20 > EMA50.",
+      },
+      {
+        key: "volume" as const,
+        label: "Volume Analysis",
+        aValue: technicalA.volumeAnalysis.value.toFixed(0),
+        bValue: technicalB.volumeAnalysis.value.toFixed(0),
+        aTone: volumeTone(technicalA.volumeAnalysis.value),
+        bTone: volumeTone(technicalB.volumeAnalysis.value),
+        note: "Skor volume tinggi menandakan minat transaksi yang kuat.",
+      },
+    ];
+  }, [
+    technicalA,
+    technicalB,
+    rsiA,
+    rsiB,
+    macdA.histogram,
+    macdB.histogram,
+    stockA.price,
+    stockB.price,
+    ema20A,
+    ema20B,
+    ema50A,
+    ema50B,
+  ]);
+  const activeIndicatorData = indicatorRows.find(
+    (item) => item.key === activeIndicator,
+  );
+  const requiredSections = useMemo(
+    () => [
+      "Keputusan Utama",
+      "Ringkasan Cepat",
+      "Grafik & Momentum",
+      "Indikator Warna",
+      `Kelebihan ${stockA.ticker}`,
+      `Kelebihan ${stockB.ticker}`,
+      "Risiko Kunci",
+      "Skenario 1-3 bulan",
+      "Action Plan",
+      "Rekomendasi Saham Terkait",
+    ],
+    [stockA.ticker, stockB.ticker],
+  );
+  const sectionCompleteness = useMemo(() => {
+    const lower = aiInsightMarkdown.toLowerCase();
+    return requiredSections.map((section) => ({
+      section,
+      ok: lower.includes(section.toLowerCase()),
+    }));
+  }, [aiInsightMarkdown, requiredSections]);
+
+  const loadAiModels = useCallback(async () => {
+    if (!hasApiKey) return;
+    try {
+      const all = await fetchOpenRouterModels();
+      setAiModels(all);
+      const zeroFirst = sortOpenRouterModels(
+        all.filter(
+          (item) => item.promptPrice === 0 && item.completionPrice === 0,
+        ),
+        "newest",
+      )[0];
+      const freeFirst = sortOpenRouterModels(
+        all.filter((item) => item.isFree),
+        "newest",
+      )[0];
+      const fallback = sortOpenRouterModels(all, "newest")[0];
+      setAiModel(zeroFirst?.id ?? freeFirst?.id ?? fallback?.id ?? "");
+    } catch {
+      setAiInsightError("Gagal mengambil model AI.");
+    }
+  }, [hasApiKey]);
+
+  useEffect(() => {
+    void loadAiModels();
+  }, [loadAiModels]);
+
+  useEffect(() => {
+    if (aiModelOptions.length === 0) {
+      setAiModel("");
+      return;
+    }
+    if (!aiModel || !aiModelOptions.some((item) => item.id === aiModel)) {
+      setAiModel(aiModelOptions[0].id);
+    }
+  }, [aiModelOptions, aiModel]);
+
+  const generateCompareAiInsight = async () => {
+    if (!hasApiKey) {
+      setAiInsightError("Isi VITE_OPENROUTER_API_KEY di .env terlebih dahulu.");
+      return;
+    }
+    if (!aiModel) {
+      setAiInsightError("Model AI belum siap.");
+      return;
+    }
+    setAiInsightLoading(true);
+    setAiInsightError("");
+    try {
+      const systemPrompt = `Kamu analis saham Indonesia yang objektif, tajam, actionable, dan disiplin struktur.
+Fokus membandingkan dua saham secara langsung, hindari jawaban generik.
+Gunakan bahasa Indonesia dengan markdown rapi.`;
+      const depthInstruction =
+        insightDepth === "ultra"
+          ? "Buat jawaban paling detail, lengkap, dan komprehensif."
+          : insightDepth === "detail"
+            ? "Buat jawaban detail namun tetap ringkas per bagian."
+            : "Buat jawaban standard yang to-the-point.";
+      const languageInstruction = easyLanguage
+        ? "Gunakan bahasa yang mudah dipahami pemula, jelaskan istilah teknikal dengan singkat."
+        : "Gunakan bahasa profesional analis.";
+      const coverageInstruction = mustCoverAllIndicators
+        ? "WAJIB membahas SEMUA indikator: Technical Score, RSI, MACD, EMA20, EMA50, Trend, Volume, Broker Consensus, dan valuasi PE/PBV/ROE/DY/Beta/DER."
+        : "Fokus indikator paling relevan.";
+      const userPrompt = `Bandingkan ${stockA.ticker} (${stockA.name}) vs ${stockB.ticker} (${stockB.name}) secara mendalam.
+
+Data ${stockA.ticker}:
+- Sector: ${stockA.sector}
+- Price: ${stockA.price}
+- Change: ${stockA.changePercent.toFixed(2)}%
+- Market Cap: ${stockA.marketCap}
+- PE/PBV/ROE/DY: ${stockA.pe}/${stockA.pbv}/${stockA.roe}/${stockA.dividendYield}
+- Technical Score: ${technicalA.totalScore}/100
+- Action Signal: ${getActionSignal(technicalA.totalScore)}
+- Broker Consensus: SB ${consensusA.strongBuy}, B ${consensusA.buy}, H ${consensusA.hold}, S ${consensusA.sell}, SS ${consensusA.strongSell}
+- RSI: ${rsiA.toFixed(1)}
+- MACD Histogram: ${macdA.histogram.toFixed(2)}
+- EMA20/EMA50: ${ema20A.toFixed(0)}/${ema50A.toFixed(0)}
+
+Data ${stockB.ticker}:
+- Sector: ${stockB.sector}
+- Price: ${stockB.price}
+- Change: ${stockB.changePercent.toFixed(2)}%
+- Market Cap: ${stockB.marketCap}
+- PE/PBV/ROE/DY: ${stockB.pe}/${stockB.pbv}/${stockB.roe}/${stockB.dividendYield}
+- Technical Score: ${technicalB.totalScore}/100
+- Action Signal: ${getActionSignal(technicalB.totalScore)}
+- Broker Consensus: SB ${consensusB.strongBuy}, B ${consensusB.buy}, H ${consensusB.hold}, S ${consensusB.sell}, SS ${consensusB.strongSell}
+- RSI: ${rsiB.toFixed(1)}
+- MACD Histogram: ${macdB.histogram.toFixed(2)}
+- EMA20/EMA50: ${ema20B.toFixed(0)}/${ema50B.toFixed(0)}
+
+Berikan output dengan struktur:
+# AI Insight Compare
+## Keputusan Utama
+- Pemenang saat ini: <ticker>
+- Strategi: <Buy/Hold/Wait>
+- Confidence: <xx%>
+## Ringkasan Cepat
+## Grafik & Momentum
+## Indikator Warna (Hijau/Kuning/Merah)
+## Kelebihan ${stockA.ticker}
+## Kelebihan ${stockB.ticker}
+## Risiko Kunci Keduanya
+## Skenario 1-3 bulan
+## Action Plan
+## Rekomendasi Saham Terkait (maks 5 ticker Indonesia + alasan singkat)
+
+Aturan tambahan:
+- ${depthInstruction}
+- ${languageInstruction}
+- ${coverageInstruction}
+- Jangan tanya balik, langsung final answer.
+- Beri kesimpulan yang jelas: saham mana unggul untuk profil konservatif vs agresif.`;
+      const result = await chatWithOpenRouter({
+        model: aiModel,
+        systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      });
+      setAiInsightMarkdown(result);
+      setAiInsightGeneratedAt(Date.now());
+    } catch (err) {
+      setAiInsightError(
+        err instanceof Error
+          ? err.message
+          : "Gagal membuat AI Insight Compare.",
+      );
+    } finally {
+      setAiInsightLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -453,6 +784,303 @@ const StockCompare = () => {
           onChange={setTickerB}
           exclude={tickerA}
         />
+      </div>
+
+      {/* AI Insight Compare */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">
+              AI Insight Compare
+            </h3>
+            <p className="text-[10px] text-muted-foreground">
+              AI insights provide deeper analysis for informed decisions
+            </p>
+          </div>
+          <button
+            onClick={() => void generateCompareAiInsight()}
+            disabled={aiInsightLoading || !hasApiKey}
+            className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary disabled:opacity-60"
+          >
+            {aiInsightLoading ? "Menyusun Insight..." : "Generate AI Insight"}
+          </button>
+        </div>
+
+        {!hasApiKey && (
+          <p className="rounded-md border border-loss/30 bg-loss/10 p-2 text-[11px] text-loss">
+            Isi `VITE_OPENROUTER_API_KEY` di `.env` untuk mengaktifkan AI
+            Insight.
+          </p>
+        )}
+
+        {hasApiKey && (
+          <>
+            <div className="mb-3 grid grid-cols-1 gap-2 rounded-lg border border-border bg-secondary/15 p-2.5 md:grid-cols-4">
+              <select
+                value={aiModelScope}
+                onChange={(e) => setAiModelScope(e.target.value as ModelScope)}
+                className="rounded-lg border border-border bg-card px-2 py-2 text-xs text-foreground"
+              >
+                <option value="zero">Harga 0 Saja ({aiZeroPriceCount})</option>
+                <option value="free">Free / Harga 0 ({aiFreeCount})</option>
+                <option value="all">Semua Model ({aiModels.length})</option>
+              </select>
+              <select
+                value={aiModelSort}
+                onChange={(e) => setAiModelSort(e.target.value as ModelSort)}
+                className="rounded-lg border border-border bg-card px-2 py-2 text-xs text-foreground"
+              >
+                <option value="newest">Terbaru</option>
+                <option value="oldest">Terlama</option>
+                <option value="name-asc">Nama A-Z</option>
+                <option value="name-desc">Nama Z-A</option>
+              </select>
+              <input
+                value={aiModelQuery}
+                onChange={(e) => setAiModelQuery(e.target.value)}
+                placeholder="Cari model AI..."
+                className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground"
+              />
+              <select
+                value={aiModel}
+                onChange={(e) => setAiModel(e.target.value)}
+                className="rounded-lg border border-border bg-card px-2 py-2 text-xs text-foreground"
+              >
+                {aiModelOptions.length === 0 && (
+                  <option value="">Model tidak tersedia</option>
+                )}
+                {aiModelOptions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}{" "}
+                    {item.promptPrice === 0 && item.completionPrice === 0
+                      ? "[HARGA 0]"
+                      : item.isFree
+                        ? "[FREE]"
+                        : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3 grid grid-cols-1 gap-2 rounded-lg border border-border bg-secondary/15 p-2.5 md:grid-cols-3">
+              <select
+                value={insightDepth}
+                onChange={(e) =>
+                  setInsightDepth(e.target.value as InsightDepth)
+                }
+                className="rounded-lg border border-border bg-card px-2 py-2 text-xs text-foreground"
+              >
+                <option value="standard">Detail: Standard</option>
+                <option value="detail">Detail: Lengkap</option>
+                <option value="ultra">Detail: Ultra</option>
+              </select>
+              <label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground">
+                <input
+                  type="checkbox"
+                  checked={easyLanguage}
+                  onChange={(e) => setEasyLanguage(e.target.checked)}
+                />
+                Bahasa Mudah Dipahami
+              </label>
+              <label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground">
+                <input
+                  type="checkbox"
+                  checked={mustCoverAllIndicators}
+                  onChange={(e) => setMustCoverAllIndicators(e.target.checked)}
+                />
+                Wajib Semua Indikator
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                {
+                  t: tA,
+                  stock: stockA,
+                  tech: technicalA,
+                  consensus: consensusA,
+                },
+                {
+                  t: tB,
+                  stock: stockB,
+                  tech: technicalB,
+                  consensus: consensusB,
+                },
+              ].map(({ t, stock, tech, consensus }) => (
+                <div
+                  key={stock.ticker}
+                  className="rounded-lg border border-border bg-secondary/20 p-3"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="font-mono text-sm font-extrabold text-foreground">
+                      {t}
+                    </p>
+                    <span className="text-[10px] font-semibold text-primary">
+                      {getActionSignal(tech.totalScore)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Technical Score: {tech.totalScore}/100
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Broker: {consensus.consensus} ({consensus.analysts} analis)
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 rounded-lg border border-border bg-secondary/10 p-3">
+              <p className="mb-2 text-xs font-semibold text-foreground">
+                Indicator Heatmap (Interaktif)
+              </p>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+                {indicatorRows.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveIndicator(item.key)}
+                    className={`rounded-lg border px-2 py-2 text-left text-[11px] transition-colors ${activeIndicator === item.key ? "border-primary/40 bg-primary/10" : "border-border bg-card hover:border-primary/25"}`}
+                  >
+                    <p className="font-semibold text-foreground">
+                      {item.label}
+                    </p>
+                    <div className="mt-2 flex items-center gap-1">
+                      <span
+                        className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${toneClass(item.aTone)}`}
+                      >
+                        {tA}
+                      </span>
+                      <span
+                        className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ${toneClass(item.bTone)}`}
+                      >
+                        {tB}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {activeIndicatorData && (
+                <div className="mt-3 rounded-lg border border-border bg-card p-3 text-xs">
+                  <p className="mb-2 font-semibold text-foreground">
+                    Detail: {activeIndicatorData.label}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    <div
+                      className={`rounded-md border p-2 ${toneClass(activeIndicatorData.aTone)}`}
+                    >
+                      <p className="font-semibold">{tA}</p>
+                      <p>{activeIndicatorData.aValue}</p>
+                    </div>
+                    <div
+                      className={`rounded-md border p-2 ${toneClass(activeIndicatorData.bTone)}`}
+                    >
+                      <p className="font-semibold">{tB}</p>
+                      <p>{activeIndicatorData.bValue}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {activeIndicatorData.note}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Warna indikator: Hijau = kuat, Kuning = netral, Merah =
+                    lemah.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 rounded-lg border border-border bg-secondary/10 p-3">
+              <p className="mb-2 text-xs font-semibold text-foreground">
+                Checklist Kelengkapan Insight
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+                {sectionCompleteness.map((item) => (
+                  <div
+                    key={item.section}
+                    className={`rounded-md border px-2 py-1.5 text-[11px] ${
+                      item.ok
+                        ? "border-gain/25 bg-gain/10 text-gain"
+                        : "border-loss/25 bg-loss/10 text-loss"
+                    }`}
+                  >
+                    {item.ok ? "OK" : "Missing"}: {item.section}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Tujuan checklist ini agar laporan AI tidak melewatkan bagian
+                penting.
+              </p>
+            </div>
+
+            {aiInsightMarkdown && (
+              <div className="mt-3 rounded-lg border border-border bg-secondary/10 p-3">
+                <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Laporan AI Compare</span>
+                  <span>
+                    {aiInsightGeneratedAt
+                      ? new Date(aiInsightGeneratedAt).toLocaleString("id-ID")
+                      : "-"}
+                  </span>
+                </div>
+                <div className="prose prose-sm dark:prose-invert prose-headings:text-foreground prose-strong:text-foreground prose-code:text-primary max-w-none text-[14px] leading-7">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {aiInsightMarkdown}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+
+            {aiMentionedStocks.length > 0 && (
+              <div className="mt-3 rounded-lg border border-border bg-secondary/10 p-3">
+                <p className="mb-2 text-xs font-semibold text-foreground">
+                  Rekomendasi Ticker Terkait dari AI
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {aiMentionedStocks.map((item) => (
+                    <button
+                      key={item.ticker}
+                      onClick={() => navigate(`/stock/${item.ticker}`)}
+                      className="rounded-lg border border-border bg-card p-2.5 text-left transition-colors hover:border-primary/30"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-mono text-sm font-bold text-foreground">
+                            {item.ticker.replace(".JK", "")}
+                          </p>
+                          <p className="line-clamp-1 text-[11px] text-muted-foreground">
+                            {item.name}
+                          </p>
+                        </div>
+                        <span
+                          className={
+                            item.changePercent >= 0
+                              ? "text-[11px] font-semibold text-gain"
+                              : "text-[11px] font-semibold text-loss"
+                          }
+                        >
+                          {item.changePercent >= 0 ? "+" : ""}
+                          {item.changePercent.toFixed(2)}%
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {aiInsightError && (
+          <p className="mt-3 rounded-md border border-loss/30 bg-loss/10 p-2 text-[11px] text-loss">
+            {aiInsightError}
+          </p>
+        )}
+        {hasApiKey && aiModels.length > 0 && (
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Model aktif:{" "}
+            {aiModels.find((item) => item.id === aiModel)?.name ?? aiModel}
+          </p>
+        )}
       </div>
 
       {/* Stock Cards */}

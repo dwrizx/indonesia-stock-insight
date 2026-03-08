@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   ChevronRight,
+  Bot,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
@@ -26,6 +27,7 @@ import TechnicalAnalysis from "@/components/TechnicalAnalysis";
 import PeerComparison from "@/components/PeerComparison";
 import StockNewsList from "@/components/StockNewsList";
 import AnimatedCounter from "@/components/AnimatedCounter";
+import AIStockAnalysis from "@/components/AIStockAnalysis";
 
 const StockDetail = () => {
   const { theme, toggleTheme } = useTheme();
@@ -187,6 +189,20 @@ const StockDetail = () => {
                     <span className="rounded-lg bg-primary/10 border border-primary/20 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider">
                       {stock.sector}
                     </span>
+                    <a
+                      href="#ai-analysis"
+                      className="rounded-lg border border-primary/25 bg-primary/10 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider inline-flex items-center gap-1"
+                    >
+                      <Bot className="h-3 w-3" />
+                      AI Analysis
+                    </a>
+                    <Link
+                      to="/ai-analysis"
+                      className="rounded-lg border border-primary/25 bg-primary/10 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wider inline-flex items-center gap-1"
+                    >
+                      <Bot className="h-3 w-3" />
+                      Full AI Page
+                    </Link>
                     {(() => {
                       let score = 0;
                       if (stock.pe > 0 && stock.pe < 15) score += 2;
@@ -577,6 +593,10 @@ const StockDetail = () => {
               <ExternalLink className="h-4 w-4" />
             </a>
           </motion.div>
+        </div>
+
+        <div id="ai-analysis" className="mt-6">
+          <AIStockAnalysis stock={stock} className="w-full" />
         </div>
 
         {/* Bottom Section: Peer Comparison + News */}

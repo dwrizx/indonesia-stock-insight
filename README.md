@@ -121,6 +121,20 @@ npm run dev
 bun run dev
 ```
 
+### Konfigurasi OpenRouter (AI Analysis)
+
+```bash
+cp .env.example .env
+```
+
+Isi variabel berikut di `.env`:
+
+- `VITE_OPENROUTER_API_KEY`
+- `VITE_OPENROUTER_SITE_URL`
+- `VITE_OPENROUTER_SITE_NAME`
+
+Fitur AI Analysis hanya menampilkan model OpenRouter yang `free/harga 0`.
+
 Buka [http://localhost:5173](http://localhost:5173) di browser.
 
 ### Build untuk Production

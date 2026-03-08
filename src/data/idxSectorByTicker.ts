@@ -498,5 +498,5 @@ export const idxSectorByTicker: Record<string, string> = {
   "WSBP.JK": "Bahan Baku",
   "YULE.JK": "Keuangan",
   "YUPI.JK": "Konsumen Primer",
-  "ZATA.JK": "Konsumen Non-Primer"
+  "ZATA.JK": "Konsumen Non-Primer",
 };

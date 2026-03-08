@@ -8,11 +8,7 @@ import {
 } from "@/data/stockData";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  BarChart2,
-  DollarSign,
-  TrendingUp,
-} from "lucide-react";
+import { BarChart2, DollarSign, TrendingUp } from "lucide-react";
 
 type ViewMode = "change" | "volume" | "marketCap";
 
@@ -79,12 +75,13 @@ const HeatMap = ({ stocks = baseStocks }: HeatMapProps) => {
   };
 
   // Group by sector
-  const groupedBySector = sectorList.map((sector) => ({
-    ...sector,
-    stocks: stocks
-      .filter((s) => s.sector === sector.name)
-      .sort((a, b) => b.marketCap - a.marketCap),
-  }))
+  const groupedBySector = sectorList
+    .map((sector) => ({
+      ...sector,
+      stocks: stocks
+        .filter((s) => s.sector === sector.name)
+        .sort((a, b) => b.marketCap - a.marketCap),
+    }))
     .filter((sector) => sector.stocks.length > 0)
     .sort((a, b) => b.stocks.length - a.stocks.length);
 

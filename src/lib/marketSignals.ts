@@ -47,7 +47,8 @@ export function generateMarketSignals(
     .filter((stock) => stock.low52w > 0)
     .map((stock) => {
       const fromLow = stock.price / stock.low52w;
-      const score = (1.12 - fromLow) * 90 + Math.max(stock.changePercent, 0) * 7;
+      const score =
+        (1.12 - fromLow) * 90 + Math.max(stock.changePercent, 0) * 7;
       return {
         ticker: stock.ticker,
         name: stock.name,
@@ -65,7 +66,8 @@ export function generateMarketSignals(
     .map((stock) => {
       const turnover = stock.price * stock.volume;
       const score =
-        Math.log10(Math.max(turnover, 1)) * 10 + Math.abs(stock.changePercent) * 4;
+        Math.log10(Math.max(turnover, 1)) * 10 +
+        Math.abs(stock.changePercent) * 4;
       return {
         ticker: stock.ticker,
         name: stock.name,
@@ -81,4 +83,3 @@ export function generateMarketSignals(
 
   return { breakout, rebound, active };
 }
-
