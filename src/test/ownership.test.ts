@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildInvestorConnectionIndex,
   buildOwnershipGraph,
+  computeFreeFloat,
   computeOwnershipSplit,
   filterOwnershipRecords,
   getOwnershipCoverage,
@@ -145,5 +146,86 @@ describe("getOwnershipCoverage", () => {
     expect(coverage.totalUniverseCount).toBe(3);
     expect(coverage.coverageRatio).toBe(66.67);
     expect(coverage.missingTickers).toEqual(["ASII.JK"]);
+  });
+});
+
+describe("computeFreeFloat", () => {
+  const records: OwnershipRecord[] = [
+    {
+      ticker: "BBCA.JK",
+      investorId: "djarum",
+      investorName: "Djarum Group",
+      investorType: "Corporate",
+      origin: "Local",
+      shares: 100,
+      percentage: 54.94,
+      provenance: "researched",
+    },
+    {
+      ticker: "BBCA.JK",
+      investorId: "blackrock",
+      investorName: "BlackRock",
+      investorType: "Fund",
+      origin: "Foreign",
+      shares: 50,
+      percentage: 4.0,
+      provenance: "researched",
+    },
+    {
+      ticker: "BBCA.JK",
+      investorId: "est-local",
+      investorName: "Est Local",
+      investorType: "Individual",
+      origin: "Local",
+      shares: 10,
+      percentage: 5.0,
+      provenance: "estimated", // should be ignored
+    },
+  ];
+
+  it("returns freeFloatPct = 100 - strategicPct", () => {
+    const result = computeFreeFloat(records, "BBCA.JK");
+    expect(result.strategicPct).toBe(54.94);
+    expect(result.freeFloatPct).toBe(45.06);
+    expect(result.hasResearchedData).toBe(true);
+  });
+
+  it("ignores estimated records", () => {
+    const result = computeFreeFloat(records, "BBCA.JK");
+    expect(result.strategicHolders).toHaveLength(1);
+    expect(result.strategicHolders[0]?.investorName).toBe("Djarum Group");
+  });
+
+  it("returns null freeFloatPct for ticker with no researched data", () => {
+    const result = computeFreeFloat(records, "UNKNOWN.JK");
+    expect(result.freeFloatPct).toBeNull();
+    expect(result.hasResearchedData).toBe(false);
+  });
+
+  it("clamps freeFloatPct to 0 if strategic > 100", () => {
+    const bigRecords: OwnershipRecord[] = [
+      {
+        ticker: "X.JK",
+        investorId: "c1",
+        investorName: "Corp A",
+        investorType: "Corporate",
+        origin: "Local",
+        shares: 1,
+        percentage: 60,
+        provenance: "researched",
+      },
+      {
+        ticker: "X.JK",
+        investorId: "c2",
+        investorName: "Corp B",
+        investorType: "Corporate",
+        origin: "Local",
+        shares: 1,
+        percentage: 50,
+        provenance: "researched",
+      },
+    ];
+    const result = computeFreeFloat(bigRecords, "X.JK");
+    expect(result.freeFloatPct).toBe(0);
   });
 });

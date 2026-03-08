@@ -385,3 +385,56 @@ export function getTickerUltimateOwner(
     sourceUrl: fallback.sourceUrl,
   };
 }
+
+export interface FreeFloatResult {
+  ticker: string;
+  freeFloatPct: number | null; // null = no researched data
+  strategicPct: number;
+  strategicHolders: {
+    investorName: string;
+    investorType: InvestorType;
+    percentage: number;
+  }[];
+  hasResearchedData: boolean;
+}
+
+export function computeFreeFloat(
+  records: OwnershipRecord[],
+  ticker: string,
+): FreeFloatResult {
+  const researched = records.filter(
+    (r) => r.ticker === ticker && r.provenance === "researched",
+  );
+
+  if (!researched.length) {
+    return {
+      ticker,
+      freeFloatPct: null,
+      strategicPct: 0,
+      strategicHolders: [],
+      hasResearchedData: false,
+    };
+  }
+
+  const strategic = researched.filter(
+    (r) => r.investorType === "Corporate" || r.investorType === "Bank",
+  );
+
+  const strategicPct = round2(
+    strategic.reduce((sum, r) => sum + r.percentage, 0),
+  );
+
+  const freeFloatPct = Math.max(0, Math.min(100, round2(100 - strategicPct)));
+
+  return {
+    ticker,
+    freeFloatPct,
+    strategicPct,
+    strategicHolders: strategic.map((r) => ({
+      investorName: r.investorName,
+      investorType: r.investorType,
+      percentage: r.percentage,
+    })),
+    hasResearchedData: true,
+  };
+}
