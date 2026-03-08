@@ -416,7 +416,7 @@ const OwnershipNetwork = () => {
       )
       .force(
         "charge",
-        d3.forceManyBody().strength((d) => (d.kind === "ticker" ? -800 : -420)),
+        d3.forceManyBody<SimNode>().strength((d) => (d.kind === "ticker" ? -800 : -420)),
       )
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
