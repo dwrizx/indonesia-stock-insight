@@ -22,6 +22,9 @@ import {
   BarChart2,
   Search,
   SlidersHorizontal,
+  Bot,
+  Share2,
+  Network,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +47,9 @@ import SectorDetail from "@/components/SectorDetail";
 import SmartSignals from "@/components/SmartSignals";
 import { useTheme } from "@/components/ThemeProvider";
 import StockScreener from "@/components/StockScreener";
+import AIStockAnalysis from "@/components/AIStockAnalysis";
+import OwnershipNetwork from "@/components/OwnershipNetwork";
+import ConglomerateMaps from "@/components/ConglomerateMaps";
 import {
   OverviewSkeleton,
   StocksSkeleton,
@@ -84,7 +90,15 @@ const Index = () => {
   const [pageSize, setPageSize] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "stocks" | "heatmap" | "sectors" | "compare" | "screening"
+    | "overview"
+    | "stocks"
+    | "heatmap"
+    | "sectors"
+    | "compare"
+    | "screening"
+    | "ai"
+    | "ownership"
+    | "conglomerates"
   >("overview");
   const [tabLoading, setTabLoading] = useState(false);
   const liveIndexState = useLiveMarketIndices(60000);
@@ -412,6 +426,20 @@ const Index = () => {
                     {item.label}
                   </button>
                 ))}
+                <button
+                  onClick={() => switchTab("ownership")}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-primary/35"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-primary" />
+                  Ownership Graph
+                </button>
+                <button
+                  onClick={() => switchTab("conglomerates")}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-primary/35"
+                >
+                  <Network className="h-3.5 w-3.5 text-primary" />
+                  Conglomerate Maps
+                </button>
               </div>
             </div>
           </div>
@@ -457,6 +485,24 @@ const Index = () => {
               key: "sectors" as const,
               label: "Sektor",
               icon: PieChart,
+              badge: null,
+            },
+            {
+              key: "ai" as const,
+              label: "AI Analysis",
+              icon: Bot,
+              badge: null,
+            },
+            {
+              key: "ownership" as const,
+              label: "Ownership",
+              icon: Share2,
+              badge: null,
+            },
+            {
+              key: "conglomerates" as const,
+              label: "Conglomerates",
+              icon: Network,
               badge: null,
             },
           ].map((tab) => (
@@ -507,6 +553,9 @@ const Index = () => {
               {activeTab === "heatmap" && <HeatmapSkeleton />}
               {activeTab === "sectors" && <SectorSkeleton />}
               {activeTab === "compare" && <CompareSkeleton />}
+              {activeTab === "ai" && <SectorSkeleton />}
+              {activeTab === "ownership" && <SectorSkeleton />}
+              {activeTab === "conglomerates" && <SectorSkeleton />}
             </motion.div>
           ) : (
             <>
@@ -802,6 +851,53 @@ const Index = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <StockScreener />
+                </motion.div>
+              )}
+
+              {activeTab === "ai" && (
+                <motion.div
+                  key="ai"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2 text-xs">
+                    <p className="text-muted-foreground">
+                      Gunakan mode full-page untuk fokus analisis AI dan chat.
+                    </p>
+                    <Link
+                      to="/ai-analysis"
+                      className="rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 font-semibold text-primary"
+                    >
+                      Open Full Page
+                    </Link>
+                  </div>
+                  <AIStockAnalysis className="max-w-5xl" />
+                </motion.div>
+              )}
+
+              {activeTab === "ownership" && (
+                <motion.div
+                  key="ownership"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <OwnershipNetwork />
+                </motion.div>
+              )}
+
+              {activeTab === "conglomerates" && (
+                <motion.div
+                  key="conglomerates"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ConglomerateMaps stocks={stocks} />
                 </motion.div>
               )}
             </>
