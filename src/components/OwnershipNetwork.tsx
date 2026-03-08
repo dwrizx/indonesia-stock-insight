@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ArrowUpRight,
   Building2,
   FilterX,
@@ -8,6 +11,7 @@ import {
   Landmark,
   Network,
   Link2,
+  Search,
   UserRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -88,6 +92,8 @@ function provenanceBadgeClass(provenance: "researched" | "estimated"): string {
   return "border border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-200";
 }
 
+const MAX_ALL_VIEW_NODES = 60;
+
 const OwnershipNetwork = () => {
   const navigate = useNavigate();
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -99,6 +105,11 @@ const OwnershipNetwork = () => {
     tickers[0] ?? "All",
   );
   const [tableTicker, setTableTicker] = useState<string>(tickers[0] ?? "");
+  const [tableSearch, setTableSearch] = useState("");
+  const [tableSort, setTableSort] = useState<{
+    key: "investorName" | "investorType" | "origin" | "shares" | "percentage";
+    dir: "asc" | "desc";
+  }>({ key: "percentage", dir: "desc" });
 
   useEffect(() => {
     if (!tableTicker && tickers.length > 0) {
@@ -118,13 +129,36 @@ const OwnershipNetwork = () => {
     [investorType, origin],
   );
 
-  const graphData = useMemo(
-    () =>
-      buildOwnershipGraph(filteredRecords, {
-        ticker: networkTicker === "All" ? undefined : networkTicker,
+  const graphData = useMemo(() => {
+    const raw = buildOwnershipGraph(filteredRecords, {
+      ticker: networkTicker === "All" ? undefined : networkTicker,
+    });
+
+    if (networkTicker !== "All" || raw.nodes.length <= MAX_ALL_VIEW_NODES) {
+      return raw;
+    }
+
+    // Keep only the most-connected nodes for performance
+    const topNodes = [...raw.nodes]
+      .sort((a, b) => b.degree - a.degree)
+      .slice(0, MAX_ALL_VIEW_NODES);
+    const topIds = new Set(topNodes.map((n) => n.id));
+
+    return {
+      nodes: topNodes,
+      links: raw.links.filter((l) => {
+        const srcId =
+          typeof l.source === "string"
+            ? l.source
+            : (l.source as SimNode).id;
+        const tgtId =
+          typeof l.target === "string"
+            ? l.target
+            : (l.target as SimNode).id;
+        return topIds.has(srcId) && topIds.has(tgtId);
       }),
-    [filteredRecords, networkTicker],
-  );
+    };
+  }, [filteredRecords, networkTicker]);
 
   const selectedTickerSplit = useMemo(
     () => computeOwnershipSplit(filteredRecords, tableTicker),
@@ -146,6 +180,35 @@ const OwnershipNetwork = () => {
     [filteredRecords, tableTicker],
   );
 
+  const sortedTableRows = useMemo(() => {
+    let rows = [...tableRows];
+    if (tableSearch.trim()) {
+      const q = tableSearch.toLowerCase();
+      rows = rows.filter((r) =>
+        r.investorName.toLowerCase().includes(q),
+      );
+    }
+    rows.sort((a, b) => {
+      const { key, dir } = tableSort;
+      const aVal = a[key];
+      const bVal = b[key];
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return dir === "asc"
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      return dir === "asc"
+        ? (aVal as number) - (bVal as number)
+        : (bVal as number) - (aVal as number);
+    });
+    return rows;
+  }, [tableRows, tableSearch, tableSort]);
+
+  const tableMaxPct = useMemo(
+    () => Math.max(1, ...tableRows.map((r) => r.percentage)),
+    [tableRows],
+  );
+
   const investorConnectionIndex = useMemo(
     () => buildInvestorConnectionIndex(ownershipRecords),
     [],
@@ -161,6 +224,28 @@ const OwnershipNetwork = () => {
     [tableTicker],
   );
 
+  const TYPE_COLORS: Record<InvestorType, string> = {
+    Bank: "bg-blue-500",
+    Fund: "bg-violet-500",
+    Corporate: "bg-amber-500",
+    Individual: "bg-rose-500",
+  };
+
+  const typeBreakdown = useMemo(() => {
+    const rows = getOwnershipByTicker(filteredRecords, tableTicker);
+    const types: InvestorType[] = ["Bank", "Fund", "Corporate", "Individual"];
+    return types
+      .map((type) => {
+        const typeRows = rows.filter((r) => r.investorType === type);
+        return {
+          type,
+          percentage: typeRows.reduce((sum, r) => sum + r.percentage, 0),
+          count: typeRows.length,
+        };
+      })
+      .filter((t) => t.percentage > 0);
+  }, [filteredRecords, tableTicker]);
+
   const localSharePct =
     selectedTickerSplit.totalShares > 0
       ? (selectedTickerSplit.local.shares / selectedTickerSplit.totalShares) *
@@ -173,6 +258,16 @@ const OwnershipNetwork = () => {
       : 0;
 
   const activeTicker = tableTicker.replace(".JK", "");
+
+  const toggleTableSort = (
+    key: typeof tableSort.key,
+  ) => {
+    setTableSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "desc" ? "asc" : "desc" }
+        : { key, dir: "desc" },
+    );
+  };
 
   useEffect(() => {
     const svgEl = svgRef.current;
@@ -262,6 +357,46 @@ const OwnershipNetwork = () => {
         navigate(`/stock/${node.ticker}`);
       }
     });
+
+    nodeLayer
+      .on("mouseenter", (_event, hoveredNode) => {
+        const connectedIds = new Set<string>([hoveredNode.id]);
+        simLinks.forEach((link) => {
+          const srcId =
+            typeof link.source === "string"
+              ? link.source
+              : (link.source as SimNode).id;
+          const tgtId =
+            typeof link.target === "string"
+              ? link.target
+              : (link.target as SimNode).id;
+          if (srcId === hoveredNode.id || tgtId === hoveredNode.id) {
+            connectedIds.add(srcId);
+            connectedIds.add(tgtId);
+          }
+        });
+
+        nodeLayer.attr("opacity", (d) =>
+          connectedIds.has(d.id) ? 1 : 0.12,
+        );
+        linkLayer.attr("stroke-opacity", (d) => {
+          const srcId =
+            typeof d.source === "string"
+              ? d.source
+              : (d.source as SimNode).id;
+          const tgtId =
+            typeof d.target === "string"
+              ? d.target
+              : (d.target as SimNode).id;
+          return connectedIds.has(srcId) && connectedIds.has(tgtId)
+            ? 0.8
+            : 0.03;
+        });
+      })
+      .on("mouseleave", () => {
+        nodeLayer.attr("opacity", 1);
+        linkLayer.attr("stroke-opacity", 0.45);
+      });
 
     const simulation = d3
       .forceSimulation(simNodes)
@@ -524,6 +659,20 @@ const OwnershipNetwork = () => {
         </div>
 
         <div className="mt-4 rounded-xl border border-border/70 bg-background/40 p-2">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <span className="text-[10px] text-foreground/60">
+              {graphData.nodes.length} nodes · {graphData.links.length} links
+              {networkTicker === "All" &&
+                graphData.nodes.length === MAX_ALL_VIEW_NODES && (
+                  <span className="ml-1 text-amber-600 dark:text-amber-400">
+                    (top {MAX_ALL_VIEW_NODES} by connection)
+                  </span>
+                )}
+            </span>
+            <span className="text-[10px] text-foreground/50">
+              Hover node to highlight · Drag to reposition
+            </span>
+          </div>
           {graphData.nodes.length > 0 ? (
             <svg ref={svgRef} className="h-[500px] w-full" />
           ) : (
@@ -633,6 +782,43 @@ const OwnershipNetwork = () => {
                 {formatShares(selectedTickerSplit.foreign.shares)} shares
               </p>
             </button>
+
+            {typeBreakdown.length > 0 && (
+              <div className="rounded-lg border border-border/60 bg-secondary/40 p-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+                  By Investor Type
+                </p>
+                <div className="space-y-2">
+                  {typeBreakdown.map(({ type, percentage, count }) => (
+                    <button
+                      key={type}
+                      onClick={() => setInvestorType(type)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center justify-between text-[11px] mb-0.5">
+                        <span className="font-semibold text-foreground">
+                          {type}
+                          <span className="ml-1 text-foreground/50">
+                            ({count})
+                          </span>
+                        </span>
+                        <span className="font-mono font-bold text-foreground">
+                          {percentage.toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-border/70">
+                        <div
+                          className={`h-full rounded-full transition-all ${TYPE_COLORS[type as InvestorType]}`}
+                          style={{
+                            width: `${Math.min(percentage, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -655,25 +841,59 @@ const OwnershipNetwork = () => {
             ticker terhubung untuk pindah relasi.
           </p>
 
-          <div className="mt-3 overflow-x-auto rounded-lg border border-border/70">
+          <div className="mt-3 flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Cari nama investor..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="w-full rounded-lg border border-border bg-secondary/50 py-1.5 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+            {tableSearch && (
+              <button
+                onClick={() => setTableSearch("")}
+                className="rounded-lg border border-border bg-secondary/70 px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-accent"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="mt-2 overflow-x-auto rounded-lg border border-border/70">
             <table className="w-full text-xs">
               <thead className="bg-secondary/80">
                 <tr>
-                  <th className="px-3 py-2 text-left font-bold uppercase tracking-wider text-foreground">
-                    Investor
-                  </th>
-                  <th className="px-3 py-2 text-left font-bold uppercase tracking-wider text-foreground">
-                    Type
-                  </th>
-                  <th className="px-3 py-2 text-left font-bold uppercase tracking-wider text-foreground">
-                    Local/Foreign
-                  </th>
-                  <th className="px-3 py-2 text-right font-bold uppercase tracking-wider text-foreground">
-                    Shares
-                  </th>
-                  <th className="px-3 py-2 text-right font-bold uppercase tracking-wider text-foreground">
-                    Ownership
-                  </th>
+                  {(
+                    [
+                      { key: "investorName", label: "Investor", align: "left" },
+                      { key: "investorType", label: "Type", align: "left" },
+                      { key: "origin", label: "Local/Foreign", align: "left" },
+                      { key: "shares", label: "Shares", align: "right" },
+                      { key: "percentage", label: "Ownership", align: "right" },
+                    ] as const
+                  ).map((col) => (
+                    <th
+                      key={col.key}
+                      className={`px-3 py-2 font-bold uppercase tracking-wider text-foreground cursor-pointer select-none hover:bg-accent/60 transition-colors ${col.align === "right" ? "text-right" : "text-left"}`}
+                      onClick={() => toggleTableSort(col.key)}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {col.label}
+                        {tableSort.key === col.key ? (
+                          tableSort.dir === "desc" ? (
+                            <ArrowDown className="h-3 w-3 text-primary" />
+                          ) : (
+                            <ArrowUp className="h-3 w-3 text-primary" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                      </span>
+                    </th>
+                  ))}
                   <th className="px-3 py-2 text-left font-bold uppercase tracking-wider text-foreground">
                     Data
                   </th>
@@ -686,7 +906,7 @@ const OwnershipNetwork = () => {
                 </tr>
               </thead>
               <tbody>
-                {tableRows.map((row) => {
+                {sortedTableRows.map((row) => {
                   const connectedTickers =
                     investorConnectionIndex.get(row.investorId) ?? [];
                   return (
@@ -719,8 +939,20 @@ const OwnershipNetwork = () => {
                       <td className="px-3 py-2 text-right font-mono text-foreground">
                         {formatShares(row.shares)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono font-bold text-foreground">
-                        {row.percentage.toFixed(2)}%
+                      <td className="px-3 py-2 text-right">
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="font-mono font-bold text-foreground">
+                            {row.percentage.toFixed(2)}%
+                          </span>
+                          <div className="w-16 h-1.5 rounded-full bg-border/70">
+                            <div
+                              className="h-full rounded-full bg-primary/70"
+                              style={{
+                                width: `${Math.min((row.percentage / tableMaxPct) * 100, 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
                       </td>
                       <td className="px-3 py-2">
                         <span
@@ -776,7 +1008,7 @@ const OwnershipNetwork = () => {
                     </tr>
                   );
                 })}
-                {tableRows.length === 0 && (
+                {sortedTableRows.length === 0 && (
                   <tr>
                     <td
                       colSpan={8}
