@@ -249,7 +249,20 @@ function normalizeTicker(ticker: string): string {
 
 function inferInvestorType(name: string): InvestorType {
   const lower = name.toLowerCase();
-  if (lower.includes("bank")) return "Bank";
+  // Bank – explicit banking institutions
+  if (
+    lower.includes("bank") ||
+    lower.includes("mitsubishi ufj") ||
+    lower.includes("mufg") ||
+    lower.includes("sumitomo mitsui") ||
+    lower.includes("ocbc") ||
+    lower.includes("citibank") ||
+    lower.includes("jpmorgan") ||
+    lower.includes("dbs bank")
+  ) {
+    return "Bank";
+  }
+  // Fund – portfolio / institutional investors
   if (
     lower.includes("fund") ||
     lower.includes("asset management") ||
@@ -257,14 +270,57 @@ function inferInvestorType(name: string): InvestorType {
     lower.includes("authority") ||
     lower.includes("blackrock") ||
     lower.includes("fidelity") ||
-    lower.includes("norges")
+    lower.includes("norges") ||
+    lower.includes("vanguard") ||
+    lower.includes("state street") ||
+    lower.includes("gic ") ||
+    lower.includes("temasek") ||
+    lower.includes("sovereign wealth") ||
+    lower.includes("pension") ||
+    lower.includes("dana pensiun") ||
+    lower.includes("asuransi") ||
+    lower.includes("softbank") ||
+    lower.includes("alibaba") ||
+    lower.includes("kkr") ||
+    lower.includes("carlyle") ||
+    lower.includes("capital group") ||
+    lower.includes("dimensional") ||
+    lower.includes("invesco") ||
+    lower.includes("aberdeen") ||
+    lower.includes("templeton") ||
+    lower.includes("ishares")
   ) {
     return "Fund";
   }
+  // Individual – named persons / families
   if (
     lower.includes("family") ||
     lower.includes("anthoni") ||
-    lower.includes("hartono")
+    lower.includes("hartono") ||
+    lower.includes("widjaja") ||
+    lower.includes("ciputra") ||
+    lower.includes("thohir") ||
+    lower.includes("pangestu") ||
+    lower.includes("prajogo") ||
+    lower.includes("soeryadjaja") ||
+    lower.includes("tanoto") ||
+    lower.includes("wonowidjojo") ||
+    lower.includes("hidayat") ||
+    lower.includes("lo kheng") ||
+    lower.includes("rachmat") ||
+    lower.includes("soegiarto") ||
+    lower.includes("atmadja") ||
+    lower.includes("riady") ||
+    lower.includes("panigoro") ||
+    lower.includes("sariaatmadja") ||
+    lower.includes("haliman") ||
+    lower.includes("tedja") ||
+    lower.includes("sastrawinata") ||
+    lower.includes("adikoesoemo") ||
+    lower.includes("tirtohadiguno") ||
+    lower.includes("susanto") ||
+    lower.includes("wirianata") ||
+    lower.includes("kartajaya")
   ) {
     return "Individual";
   }
@@ -273,6 +329,7 @@ function inferInvestorType(name: string): InvestorType {
 
 function inferInvestorOrigin(name: string): InvestorOrigin {
   const lower = name.toLowerCase();
+  // Local – Indonesian entities and persons
   if (
     lower.includes("indonesia") ||
     lower.includes("pemerintah") ||
@@ -282,7 +339,44 @@ function inferInvestorOrigin(name: string): InvestorOrigin {
     lower.includes("pt ") ||
     lower.includes("nusantara") ||
     lower.includes("budi") ||
-    lower.includes("public float")
+    lower.includes("public float") ||
+    lower.includes("sinar mas") ||
+    lower.includes("sinarmas") ||
+    lower.includes("djarum") ||
+    lower.includes("widjaja") ||
+    lower.includes("ciputra") ||
+    lower.includes("thohir") ||
+    lower.includes("pangestu") ||
+    lower.includes("prajogo") ||
+    lower.includes("soeryadjaja") ||
+    lower.includes("saratoga") ||
+    lower.includes("tanoto") ||
+    lower.includes("wonowidjojo") ||
+    lower.includes("gudang garam") ||
+    lower.includes("hidayat") ||
+    lower.includes("lo kheng") ||
+    lower.includes("kalbe") ||
+    lower.includes("barito") ||
+    lower.includes("adaro") ||
+    lower.includes("medco") ||
+    lower.includes("pertamina") ||
+    lower.includes("astra") ||
+    lower.includes("telkom") ||
+    lower.includes("lippo") ||
+    lower.includes("panigoro") ||
+    lower.includes("sariaatmadja") ||
+    lower.includes("atmadja") ||
+    lower.includes("haliman") ||
+    lower.includes("tedja") ||
+    lower.includes("tirtohadiguno") ||
+    lower.includes("susanto") ||
+    lower.includes("wirianata") ||
+    lower.includes("alfindo") ||
+    lower.includes("kawan lama") ||
+    lower.includes("tangerang") ||
+    lower.includes("pakuwon") ||
+    lower.includes("arthakencana") ||
+    lower.includes("tanito")
   ) {
     return "Local";
   }
